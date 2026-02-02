@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/screen/profile_page.dart';
 import '../constant/app_colors.dart';
 import '../services/temp_data_service.dart';
+import '../models/User.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -21,6 +23,12 @@ class _ListUserPageState extends State<ListUserPage> {
 
   Future<void> _loadUsers() async {
     final loadedUsers = await TempDataService.getUsers();
+    // Trier par ordre alphabétique (nom + prénom)
+    loadedUsers.sort((a, b) {
+      final nameA = '${a['surname'] ?? ''}${a['name'] ?? ''}'.toLowerCase();
+      final nameB = '${b['surname'] ?? ''}${b['name'] ?? ''}'.toLowerCase();
+      return nameA.compareTo(nameB);
+    });
     setState(() {
       users = loadedUsers;
       isLoading = false;
@@ -101,12 +109,14 @@ class _ListUserPageState extends State<ListUserPage> {
                             .trim(),
                         role: user['role'] ?? 'Rôle inconnu',
                         email: user['email'] ?? 'Email inconnu',
-                        userId: user['id']?.toString() ?? '',
-                        imageUri:
-                            user['imageUri'] ?? 'profileImage/default.png',
+                        imageUri: user['imageUri'] ?? 'default.png',
                         onPressed: () {
-                          print(
-                            'Utilisateur cliqué: ${user['name']} ${user['surname']} (ID: ${user['id']})',
+                          final userObj = User.fromJson(user);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfilePage(user: userObj),
+                            ),
                           );
                         },
                       );
@@ -124,7 +134,6 @@ class _ListUserPageState extends State<ListUserPage> {
     required String name,
     required String role,
     required String email,
-    required String userId,
     required String imageUri,
     required VoidCallback onPressed,
   }) {
@@ -159,7 +168,7 @@ class _ListUserPageState extends State<ListUserPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.asset(
-                      'assets/images/$imageUri',
+                      'assets/$imageUri',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -167,7 +176,7 @@ class _ListUserPageState extends State<ListUserPage> {
                           child: Icon(
                             Icons.person,
                             size: 40,
-                            color: AppColors.textSecondary,
+                            color: const Color.fromARGB(255, 187, 67, 67),
                           ),
                         );
                       },
@@ -197,17 +206,7 @@ class _ListUserPageState extends State<ListUserPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 1),
-                    Text(
-                      role,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: role == 'COACH'
-                            ? AppColors.green
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _buildRoleBadge(role),
                     const SizedBox(height: 1),
                     Text(
                       email,
@@ -225,6 +224,46 @@ class _ListUserPageState extends State<ListUserPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String role) {
+    Color badgeColor;
+    String displayText = role;
+
+    switch (role) {
+      case 'COACH':
+        badgeColor = AppColors.coach;
+        break;
+      case 'ATHLETE_FULL':
+        badgeColor = AppColors.athleteFull;
+        break;
+      case 'ATHLETE_PROG':
+        badgeColor = AppColors.athleteProg;
+        break;
+      case 'ATHLETE_CO':
+        badgeColor = AppColors.athleteCo;
+        break;
+      default:
+        badgeColor = AppColors.black;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Text(
+        displayText,
+        style: const TextStyle(
+          color: AppColors.secondary,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

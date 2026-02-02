@@ -8,6 +8,9 @@ class TempDataService {
       "name": "Tristan",
       "surname": "Debord",
       "email": "tristan.debord@gmail.com",
+      "phone": "0612345678",
+      "age": 28,
+      "weight": 75,
       "role": "COACH",
       "stat": [
         {
@@ -26,7 +29,10 @@ class TempDataService {
       "name": "Jean",
       "surname": "Dupont",
       "email": "jean.dupont@email.com",
-      "role": "MEMBER",
+      "phone": "0623456789",
+      "age": 25,
+      "weight": 68,
+      "role": "ATHLETE_PROG",
       "stat": [
         {
           "id": 8,
@@ -44,6 +50,9 @@ class TempDataService {
       "name": "Marie",
       "surname": "Martin",
       "email": "marie.martin@email.com",
+      "phone": "0634567890",
+      "age": 32,
+      "weight": 62,
       "role": "COACH",
       "stat": [
         {
@@ -62,7 +71,10 @@ class TempDataService {
       "name": "Pierre",
       "surname": "Bernard",
       "email": "pierre.bernard@email.com",
-      "role": "MEMBER",
+      "phone": "0645678901",
+      "age": 29,
+      "weight": 80,
+      "role": "ATHLETE_CO",
       "stat": [
         {
           "id": 10,
@@ -80,7 +92,10 @@ class TempDataService {
       "name": "Sophie",
       "surname": "Petit",
       "email": "sophie.petit@email.com",
-      "role": "MEMBER",
+      "phone": "0656789012",
+      "age": 26,
+      "weight": 58,
+      "role": "ATHLETE_FULL",
       "stat": [
         {
           "id": 11,
@@ -98,6 +113,9 @@ class TempDataService {
       "name": "Lucas",
       "surname": "Dubois",
       "email": "lucas.dubois@email.com",
+      "phone": "0667890123",
+      "age": 31,
+      "weight": 85,
       "role": "COACH",
       "stat": [
         {
@@ -116,7 +134,10 @@ class TempDataService {
       "name": "Emma",
       "surname": "Leroy",
       "email": "emma.leroy@email.com",
-      "role": "MEMBER",
+      "phone": "0678901234",
+      "age": 24,
+      "weight": 55,
+      "role": "ATHLETE_PROG",
       "stat": [
         {
           "id": 13,
@@ -134,7 +155,10 @@ class TempDataService {
       "name": "Nicolas",
       "surname": "Moreau",
       "email": "nicolas.moreau@email.com",
-      "role": "MEMBER",
+      "phone": "0689012345",
+      "age": 27,
+      "weight": 72,
+      "role": "ATHLETE_CO",
       "stat": [
         {
           "id": 14,
@@ -152,6 +176,9 @@ class TempDataService {
       "name": "Camille",
       "surname": "Laurent",
       "email": "camille.laurent@email.com",
+      "phone": "0690123456",
+      "age": 30,
+      "weight": 65,
       "role": "COACH",
       "stat": [
         {
@@ -170,7 +197,10 @@ class TempDataService {
       "name": "Antoine",
       "surname": "Simon",
       "email": "antoine.simon@email.com",
-      "role": "MEMBER",
+      "phone": "0601234567",
+      "age": 23,
+      "weight": 70,
+      "role": "ATHLETE_FULL",
       "stat": [
         {
           "id": 16,
@@ -188,7 +218,10 @@ class TempDataService {
       "name": "Léa",
       "surname": "Garcia",
       "email": "lea.garcia@email.com",
-      "role": "MEMBER",
+      "phone": "0612345678",
+      "age": 22,
+      "weight": 52,
+      "role": "ATHLETE_PROG",
       "stat": [
         {
           "id": 17,
