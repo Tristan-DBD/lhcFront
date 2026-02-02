@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constant/app_colors.dart';
+import '../services/temp_data_service.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -9,52 +10,22 @@ class ListUserPage extends StatefulWidget {
 }
 
 class _ListUserPageState extends State<ListUserPage> {
-  // Liste des utilisateurs avec leurs informations
-  final List<Map<String, String>> users = [
-    {'name': 'Jean Dupont', 'role': 'Membre', 'email': 'jean.dupont@email.com'},
-    {
-      'name': 'Marie Martin',
-      'role': 'Coach',
-      'email': 'marie.martin@email.com',
-    },
-    {
-      'name': 'Pierre Bernard',
-      'role': 'Membre',
-      'email': 'pierre.bernard@email.com',
-    },
-    {
-      'name': 'Sophie Petit',
-      'role': 'Membre',
-      'email': 'sophie.petit@email.com',
-    },
-    {
-      'name': 'Lucas Dubois',
-      'role': 'Coach',
-      'email': 'lucas.dubois@email.com',
-    },
-    {'name': 'Emma Leroy', 'role': 'Membre', 'email': 'emma.leroy@email.com'},
-    {
-      'name': 'Nicolas Moreau',
-      'role': 'Membre',
-      'email': 'nicolas.moreau@email.com',
-    },
-    {
-      'name': 'Camille Laurent',
-      'role': 'Coach',
-      'email': 'camille.laurent@email.com',
-    },
-    {
-      'name': 'Antoine Simon',
-      'role': 'Membre',
-      'email': 'antoine.simon@email.com',
-    },
-    {'name': 'Léa Garcia', 'role': 'Membre', 'email': 'lea.garcia@email.com'},
-    {
-      'name': 'Thomas Robert',
-      'role': 'Membre',
-      'email': 'thomas.robert@email.com',
-    },
-  ];
+  List<Map<String, dynamic>> users = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    final loadedUsers = await TempDataService.getUsers();
+    setState(() {
+      users = loadedUsers;
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,29 +53,66 @@ class _ListUserPageState extends State<ListUserPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Grille des utilisateurs
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.75,
+              if (isLoading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return _buildUserCard(
-                      name: user['name']!,
-                      role: user['role']!,
-                      email: user['email']!,
-                      onPressed: () {
-                        print('Utilisateur cliqué: ${user['name']}');
-                      },
-                    );
-                  },
+                )
+              else if (users.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Aucun utilisateur trouvé',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                // Grille des utilisateurs
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.75,
+                        ),
+                    itemCount: users.length,
+                    itemBuilder: (context, index) {
+                      final user = users[index];
+                      return _buildUserCard(
+                        name: '${user['name'] ?? ''} ${user['surname'] ?? ''}'
+                            .trim(),
+                        role: user['role'] ?? 'Rôle inconnu',
+                        email: user['email'] ?? 'Email inconnu',
+                        userId: user['id']?.toString() ?? '',
+                        imageUri:
+                            user['imageUri'] ?? 'profileImage/default.png',
+                        onPressed: () {
+                          print(
+                            'Utilisateur cliqué: ${user['name']} ${user['surname']} (ID: ${user['id']})',
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -116,6 +124,8 @@ class _ListUserPageState extends State<ListUserPage> {
     required String name,
     required String role,
     required String email,
+    required String userId,
+    required String imageUri,
     required VoidCallback onPressed,
   }) {
     return GestureDetector(
@@ -149,7 +159,7 @@ class _ListUserPageState extends State<ListUserPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.asset(
-                      'assets/images/defaultProfileImage.png',
+                      'assets/images/$imageUri',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -192,7 +202,7 @@ class _ListUserPageState extends State<ListUserPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 9,
-                        color: role == 'Coach'
+                        color: role == 'COACH'
                             ? AppColors.green
                             : AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
