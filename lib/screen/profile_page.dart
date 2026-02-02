@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/constant/app_colors.dart';
+import 'package:lhc_front/screen/programme_page.dart';
 import '../models/User.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -237,7 +238,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildOptionRow({required String label}) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProgrammePage(user: widget.user)),
+        );
+      },
       child: Row(
         children: [
           Text(label),
