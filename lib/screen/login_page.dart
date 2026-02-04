@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/services/auth.dart';
+import 'package:lhc_front/services/storage.dart';
 import '../constant/app_colors.dart';
 import 'home_page.dart';
 
@@ -213,14 +215,32 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomePage(),
-                            ),
+                          final login = await AuthService.login(
+                            _loginController.text,
+                            _passwordController.text,
                           );
+                          if (login['success'] == true) {
+                            await StorageService.saveToken(
+                              login['data'][0]['message'],
+                            );
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HomePage(),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(login['data'][0]['message']),
+                                backgroundColor: AppColors.error,
+                                duration: const Duration(seconds: 3),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(

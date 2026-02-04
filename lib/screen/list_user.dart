@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/screen/create_user.dart';
 import 'package:lhc_front/screen/profile_page.dart';
+import 'package:lhc_front/services/user.dart';
 import '../constant/app_colors.dart';
-import '../services/temp_data_service.dart';
 import '../models/User.dart';
 
 class ListUserPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class ListUserPage extends StatefulWidget {
 
 class _ListUserPageState extends State<ListUserPage> {
   List<Map<String, dynamic>> users = [];
+  String? errorMessage;
   bool isLoading = true;
 
   @override
@@ -22,17 +24,47 @@ class _ListUserPageState extends State<ListUserPage> {
   }
 
   Future<void> _loadUsers() async {
-    final loadedUsers = await TempDataService.getUsers();
-    // Trier par ordre alphabétique (nom + prénom)
-    loadedUsers.sort((a, b) {
-      final nameA = '${a['surname'] ?? ''}${a['name'] ?? ''}'.toLowerCase();
-      final nameB = '${b['surname'] ?? ''}${b['name'] ?? ''}'.toLowerCase();
-      return nameA.compareTo(nameB);
-    });
-    setState(() {
-      users = loadedUsers;
-      isLoading = false;
-    });
+    try {
+      final response = await UserService.getAll();
+
+      if (response['success'] == false) {
+        setState(() {
+          isLoading = false;
+          errorMessage = response['message'] ?? 'Erreur lors du chargement';
+        });
+        return;
+      }
+
+      // Extraire la liste d'utilisateurs de la réponse
+      List<Map<String, dynamic>> userList;
+
+      if (response['data'] is List && response['data'].isNotEmpty) {
+        userList = List<Map<String, dynamic>>.from(
+          response['data'][0]['message'],
+        );
+        // Trier par ordre croissant de nom
+        userList.sort(
+          (a, b) => (a['surname'] ?? '').compareTo(b['surname'] ?? ''),
+        );
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Format de réponse invalide';
+        });
+        return;
+      }
+
+      setState(() {
+        users = userList;
+        isLoading = false;
+        errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Erreur: $e';
+      });
+    }
   }
 
   @override
@@ -54,6 +86,22 @@ class _ListUserPageState extends State<ListUserPage> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: AppColors.textPrimary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateUserScreen(),
+                ),
+              ).then((_) {
+                // Rafraîchir la liste quand on revient de la création
+                _loadUsers();
+              });
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -79,8 +127,8 @@ class _ListUserPageState extends State<ListUserPage> {
                           color: AppColors.textSecondary,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Aucun utilisateur trouvé',
+                        Text(
+                          errorMessage ?? 'Aucun utilisateur trouvé',
                           style: TextStyle(
                             fontSize: 18,
                             color: AppColors.textSecondary,
@@ -105,7 +153,7 @@ class _ListUserPageState extends State<ListUserPage> {
                     itemBuilder: (context, index) {
                       final user = users[index];
                       return _buildUserCard(
-                        name: '${user['name'] ?? ''} ${user['surname'] ?? ''}'
+                        name: '${user['surname'] ?? ''} ${user['name'] ?? ''}'
                             .trim(),
                         role: user['role'] ?? 'Rôle inconnu',
                         email: user['email'] ?? 'Email inconnu',
