@@ -9,7 +9,7 @@ class User {
   final String role;
   final List<Map<String, dynamic>> stat;
   final String imageUri;
-  final String? progUri;
+  final List<Map<String, dynamic>> progUri;
 
   User({
     required this.id,
@@ -22,7 +22,7 @@ class User {
     required this.role,
     required this.stat,
     required this.imageUri,
-    this.progUri,
+    required this.progUri,
   });
 
   // Factory constructor pour créer un User depuis JSON
@@ -32,6 +32,14 @@ class User {
     if (json['stat'] != null) {
       final statData = json['stat'] as List;
       statList = statData.map((item) => item as Map<String, dynamic>).toList();
+    }
+
+    List<Map<String, dynamic>> progUriList = [];
+    if (json['progUri'] != null) {
+      final progUriData = json['progUri'] as List;
+      progUriList = progUriData
+          .map((item) => item as Map<String, dynamic>)
+          .toList();
     }
 
     return User(
@@ -45,7 +53,7 @@ class User {
       role: json['role'] as String? ?? '',
       stat: statList,
       imageUri: json['imageUri'] as String? ?? 'default.png',
-      progUri: json['progUri'] as String?,
+      progUri: progUriList,
     );
   }
 
@@ -68,6 +76,35 @@ class User {
 
   // Getter pour le nom complet
   String get fullName => '$name $surname'.trim();
+
+  // Méthode copyWith pour créer une copie avec certaines propriétés modifiées
+  User copyWith({
+    int? id,
+    String? name,
+    String? surname,
+    String? email,
+    String? phone,
+    int? age,
+    int? weight,
+    String? role,
+    List<Map<String, dynamic>>? stat,
+    String? imageUri,
+    List<Map<String, dynamic>>? progUri,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      surname: surname ?? this.surname,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      age: age ?? this.age,
+      weight: weight ?? this.weight,
+      role: role ?? this.role,
+      stat: stat ?? this.stat,
+      imageUri: imageUri ?? this.imageUri,
+      progUri: progUri ?? this.progUri,
+    );
+  }
 
   @override
   String toString() {

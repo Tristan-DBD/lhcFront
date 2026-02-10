@@ -18,6 +18,19 @@ class UserService {
     }
   }
 
+  static update(int userId, userData) async {
+    try {
+      final user = await http.put(
+        Uri.parse('${ApiService().apiUrl}/user/$userId'),
+        headers: ApiService().headers(token: await StorageService.getToken()),
+        body: jsonEncode(userData),
+      );
+      return jsonDecode(user.body);
+    } catch (e) {
+      throw e;
+    }
+  }
+
   static getAll() async {
     try {
       final users = await http.get(

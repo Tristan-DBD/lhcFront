@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -33,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       resizeToAvoidBottomInset:
           false, // Empêche le redimensionnement au clavier
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       body: Center(
         // Centre le formulaire verticalement
         child: SingleChildScrollView(
@@ -176,25 +177,10 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 12),
 
-                  // Se souvenir de moi et mot de passe oublié
+                  // Mot de passe oublié
                   Row(
                     children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                      ),
-                      const Flexible(
-                        child: Text(
-                          'Se souvenir de moi',
-                          style: TextStyle(color: AppColors.textSecondary),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                      const Spacer(),
                       const Spacer(),
                       TextButton(
                         onPressed: () {
@@ -215,34 +201,59 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          final login = await AuthService.login(
-                            _loginController.text,
-                            _passwordController.text,
-                          );
-                          if (login['success'] == true) {
-                            await StorageService.saveToken(
-                              login['data'][0]['message'],
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HomePage(),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(login['data'][0]['message']),
-                                backgroundColor: AppColors.error,
-                                duration: const Duration(seconds: 3),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          }
-                        }
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              if (_formKey.currentState!.validate()) {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+
+                                try {
+                                  final login = await AuthService.login(
+                                    _loginController.text,
+                                    _passwordController.text,
+                                  );
+
+                                  if (login['success'] == true) {
+                                    await StorageService.saveToken(
+                                      login['data'][0]['message'],
+                                    );
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const HomePage(),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          login['data'][0]['message'],
+                                        ),
+                                        backgroundColor: AppColors.error,
+                                        duration: const Duration(seconds: 3),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  print('Login error: $e');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Erreur de connexion: $e'),
+                                      backgroundColor: AppColors.error,
+                                      duration: const Duration(seconds: 3),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                } finally {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.buttonPrimary,
                         foregroundColor: AppColors.buttonSecondary,
@@ -251,13 +262,24 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         elevation: 2,
                       ),
-                      child: const Text(
-                        'Se connecter',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Se connecter',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],

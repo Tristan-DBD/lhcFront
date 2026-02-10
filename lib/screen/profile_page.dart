@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/constant/app_colors.dart';
+import 'package:lhc_front/screen/edit_user.dart';
 import 'package:lhc_front/screen/programme_page.dart';
+import 'package:lhc_front/utils/image_helper.dart';
 import '../models/User.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,6 +15,15 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  late User _currentUser; // Variable locale pour gérer l'état
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser =
+        widget.user; // Initialiser avec l'utilisateur passé en paramètre
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,8 +41,31 @@ class _ProfilePageState extends State<ProfilePage> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(
+            context,
+            _currentUser,
+          ), // Retourner l'utilisateur mis à jour
         ),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditUserScreen(user: _currentUser),
+                ),
+              );
+
+              // Si un utilisateur mis à jour est retourné, mettre à jour l'affichage
+              if (result != null && result is User) {
+                setState(() {
+                  _currentUser = result; // Remplacer complètement l'utilisateur
+                });
+              }
+            },
+            icon: const Icon(Icons.edit, color: AppColors.textPrimary),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -75,20 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(75),
-                          child: Image.asset(
-                            'assets/${widget.user.imageUri}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppColors.background,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: AppColors.textSecondary,
-                                ),
-                              );
-                            },
-                          ),
+                          child: ImageHelper.profileImage(_currentUser.imageUri),
                         ),
                       ),
                     ),
@@ -105,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   children: [
                     Text(
-                      widget.user.fullName,
+                      _currentUser.fullName,
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -114,7 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    _buildRoleBadge(widget.user.role),
+                    _buildRoleBadge(_currentUser.role),
                   ],
                 ),
               ),
@@ -141,25 +162,25 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildInfoRow(
                       icon: Icons.email,
                       label: 'Email',
-                      value: widget.user.email,
+                      value: _currentUser.email,
                     ),
                     const SizedBox(height: 16),
                     _buildInfoRow(
                       icon: Icons.phone,
                       label: 'Téléphone',
-                      value: widget.user.phone,
+                      value: _currentUser.phone,
                     ),
                     const SizedBox(height: 16),
                     _buildInfoRow(
                       icon: Icons.cake,
                       label: 'Âge',
-                      value: '${widget.user.age} ans',
+                      value: '${_currentUser.age} ans',
                     ),
                     const SizedBox(height: 16),
                     _buildInfoRow(
                       icon: Icons.monitor_weight,
                       label: 'Poids',
-                      value: '${widget.user.weight} kg',
+                      value: '${_currentUser.weight} kg',
                     ),
                   ],
                 ),
@@ -167,7 +188,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
               const SizedBox(height: 30),
 
-              if (widget.user.role.toUpperCase() != 'ATHLETE_CO')
+              if (_currentUser.role.toUpperCase() != 'ATHLETE_CO')
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20.0),
                   padding: const EdgeInsets.all(20.0),
@@ -241,7 +262,19 @@ class _ProfilePageState extends State<ProfilePage> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ProgrammePage(user: widget.user)),
+          MaterialPageRoute(
+            builder: (context) => ProgrammePage(
+              user: _currentUser,
+              onProgramsUpdated: (updatedPrograms) {
+                // Mettre à jour l'utilisateur local avec les nouveaux programmes
+                setState(() {
+                  _currentUser = _currentUser.copyWith(
+                    progUri: updatedPrograms,
+                  );
+                });
+              },
+            ),
+          ),
         );
       },
       child: Row(

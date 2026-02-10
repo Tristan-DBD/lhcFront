@@ -4,6 +4,7 @@ import 'package:lhc_front/screen/profile_page.dart';
 import 'package:lhc_front/services/user.dart';
 import '../constant/app_colors.dart';
 import '../models/User.dart';
+import '../utils/image_helper.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -157,15 +158,31 @@ class _ListUserPageState extends State<ListUserPage> {
                             .trim(),
                         role: user['role'] ?? 'Rôle inconnu',
                         email: user['email'] ?? 'Email inconnu',
-                        imageUri: user['imageUri'] ?? 'default.png',
-                        onPressed: () {
+                        imageUri:
+                            user['imageUri'] ?? 'profileImage/default.png',
+                        onPressed: () async {
                           final userObj = User.fromJson(user);
-                          Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ProfilePage(user: userObj),
                             ),
                           );
+
+                          // Si un utilisateur a été modifié, mettre à jour la liste localement
+                          if (result != null && result is User) {
+                            setState(() {
+                              // Trouver l'index de l'utilisateur dans la liste
+                              final userIndex = users.indexWhere(
+                                (u) => u['id'] == result.id,
+                              );
+
+                              // Si trouvé, mettre à jour les données dans la liste
+                              if (userIndex != -1) {
+                                users[userIndex] = result.toJson();
+                              }
+                            });
+                          }
                         },
                       );
                     },
@@ -215,20 +232,7 @@ class _ListUserPageState extends State<ListUserPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
-                    child: Image.asset(
-                      'assets/$imageUri',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.background,
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: const Color.fromARGB(255, 187, 67, 67),
-                          ),
-                        );
-                      },
-                    ),
+                    child: ImageHelper.profileImage(imageUri),
                   ),
                 ),
               ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/screen/list_user.dart';
+import 'package:lhc_front/screen/login_page.dart';
+import 'package:lhc_front/services/storage.dart';
 import '../constant/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -98,7 +100,9 @@ class _HomePageState extends State<HomePage> {
                       color: AppColors.black,
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (context) => ListUserPage()),
+                          MaterialPageRoute<void>(
+                            builder: (context) => ListUserPage(),
+                          ),
                         );
                       },
                     ),
@@ -110,6 +114,17 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         print('Cours collectifs');
                       },
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await StorageService.clearToken();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      },
+                      child: Text('Déconnexion'),
                     ),
                   ],
                 ),
