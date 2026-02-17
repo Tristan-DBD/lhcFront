@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/models/User.dart';
-import 'package:lhc_front/services/user.dart';
-import 'package:lhc_front/services/supabase_storage.dart';
-import 'package:lhc_front/utils/image_helper.dart';
+import '../../../../models/User.dart';
+import '../../../../services/stat.dart';
+import '../../../../services/user.dart';
+import '../../../../services/supabase_storage.dart';
+import '../../../../utils/image_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../constant/app_colors.dart';
+import '../../../../constant/app_colors.dart';
+import '../../../../widgets/app_text_field.dart';
+import '../../../../widgets/app_button.dart';
+import '../../../../widgets/role_badge.dart';
+import '../../../../utils/message_service.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key, required this.user});
@@ -27,6 +32,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _weightController;
   late final TextEditingController _emailController;
+  late final TextEditingController _squatController;
+  late final TextEditingController _benchController;
+  late final TextEditingController _deadliftController;
 
   bool _isLoading = false;
   File? _newProfileImage;
@@ -43,6 +51,26 @@ class _EditUserScreenState extends State<EditUserScreen> {
       text: widget.user.weight.toString(),
     );
     _emailController = TextEditingController(text: widget.user.email);
+    if (widget.user.stat.isEmpty) {
+      _squatController = TextEditingController(text: '0');
+      _benchController = TextEditingController(text: '0');
+      _deadliftController = TextEditingController(text: '0');
+    } else {
+      final stats = widget.user.stat[0];
+      // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
+      final messageStats = stats['message'] as Map<String, dynamic>?;
+      final finalStats = messageStats ?? stats;
+
+      _squatController = TextEditingController(
+        text: finalStats['squat'].toString(),
+      );
+      _benchController = TextEditingController(
+        text: finalStats['bench'].toString(),
+      );
+      _deadliftController = TextEditingController(
+        text: finalStats['deadlift'].toString(),
+      );
+    }
   }
 
   @override
@@ -101,6 +129,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     try {
       // Comparer les données pour n'envoyer que les champs modifiés
       Map<String, dynamic> updatedData = {};
+      Map<String, dynamic> updatedStatsData = {};
 
       // Vérifier chaque champ et n'ajouter que s'il a changé
       if (_nameController.text.trim() != widget.user.name) {
@@ -128,10 +157,47 @@ class _EditUserScreenState extends State<EditUserScreen> {
         updatedData['weight'] = newWeight;
       }
 
+      // pour les stats
+      if (widget.user.stat.isNotEmpty) {
+        final stats = widget.user.stat[0];
+        // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
+        final messageStats = stats['message'] as Map<String, dynamic>?;
+        final finalStats = messageStats ?? stats;
+
+        final currentSquat =
+            double.tryParse(_squatController.text.replaceAll(',', '.')) ?? 0.0;
+        final currentBench =
+            double.tryParse(_benchController.text.replaceAll(',', '.')) ?? 0.0;
+        final currentDeadlift =
+            double.tryParse(_deadliftController.text.replaceAll(',', '.')) ??
+            0.0;
+
+        final apiSquat = (finalStats['squat'] as num).toDouble();
+        final apiBench = (finalStats['bench'] as num).toDouble();
+        final apiDeadlift = (finalStats['deadlift'] as num).toDouble();
+
+        if (currentSquat != apiSquat) {
+          updatedStatsData['squat'] = currentSquat;
+        }
+        if (currentBench != apiBench) {
+          updatedStatsData['bench'] = currentBench;
+        }
+        if (currentDeadlift != apiDeadlift) {
+          updatedStatsData['deadlift'] = currentDeadlift;
+        }
+      } else {
+        // Si pas de stats existantes, considérer tous les champs comme modifiés
+        updatedStatsData['squat'] =
+            double.tryParse(_squatController.text.replaceAll(',', '.')) ?? 0.0;
+        updatedStatsData['bench'] =
+            double.tryParse(_benchController.text.replaceAll(',', '.')) ?? 0.0;
+        updatedStatsData['deadlift'] =
+            double.tryParse(_deadliftController.text.replaceAll(',', '.')) ??
+            0.0;
+      }
+
       // Envoyer les données utilisateur si elles ont changé
       if (updatedData.isNotEmpty) {
-        print('Données modifiées à envoyer: $updatedData');
-
         final result = await UserService.update(widget.user.id, updatedData);
 
         if (result['success'] == false) {
@@ -154,32 +220,83 @@ class _EditUserScreenState extends State<EditUserScreen> {
         newImagePath = await _updateProfileImage();
       }
 
-      // Créer l'objet User mis à jour
-      User updatedUser = widget.user.copyWith(
-        name: updatedData['name'],
-        surname: updatedData['surname'],
-        email: updatedData['email'],
-        phone: updatedData['phone'],
-        age: updatedData['age'],
-        weight: updatedData['weight'],
-        imageUri: newImagePath, // Ajouter le nouveau chemin de l'image
-      );
+      // Mettre à jour les stats si elles ont été modifiées
+      User updatedUser;
+      if (updatedStatsData.isNotEmpty) {
+        Map<String, dynamic> updatedStats = await _updateStats();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Modifications enregistrées avec succès'),
-          backgroundColor: AppColors.success,
-        ),
+        if (widget.user.stat.isEmpty) {
+          // Création de nouvelles stats
+          if (updatedStats['data'] is List && updatedStats['data'].isNotEmpty) {
+            updatedUser = widget.user.copyWith(
+              name: updatedData['name'],
+              surname: updatedData['surname'],
+              email: updatedData['email'],
+              phone: updatedData['phone'],
+              age: updatedData['age'],
+              weight: updatedData['weight'],
+              imageUri: newImagePath,
+              stat: [updatedStats['data'][0]],
+            );
+          } else {
+            updatedUser = widget.user.copyWith(
+              name: updatedData['name'],
+              surname: updatedData['surname'],
+              email: updatedData['email'],
+              phone: updatedData['phone'],
+              age: updatedData['age'],
+              weight: updatedData['weight'],
+              imageUri: newImagePath,
+            );
+          }
+        } else {
+          // Mise à jour des stats existantes
+          List<Map<String, dynamic>> newStats = List.from(widget.user.stat);
+          if (updatedStats['data'] is List && updatedStats['data'].isNotEmpty) {
+            newStats[0] = {...newStats[0], ...updatedStats['data'][0]};
+            updatedUser = widget.user.copyWith(
+              name: updatedData['name'],
+              surname: updatedData['surname'],
+              email: updatedData['email'],
+              phone: updatedData['phone'],
+              age: updatedData['age'],
+              weight: updatedData['weight'],
+              imageUri: newImagePath,
+              stat: newStats,
+            );
+          } else {
+            updatedUser = widget.user.copyWith(
+              name: updatedData['name'],
+              surname: updatedData['surname'],
+              email: updatedData['email'],
+              phone: updatedData['phone'],
+              age: updatedData['age'],
+              weight: updatedData['weight'],
+              imageUri: newImagePath,
+            );
+          }
+        }
+      } else {
+        // Pas de modification de stats, créer l'utilisateur avec les données de base uniquement
+        updatedUser = widget.user.copyWith(
+          name: updatedData['name'],
+          surname: updatedData['surname'],
+          email: updatedData['email'],
+          phone: updatedData['phone'],
+          age: updatedData['age'],
+          weight: updatedData['weight'],
+          imageUri: newImagePath,
+        );
+      }
+
+      MessageService.showSuccess(
+        context,
+        'Modifications enregistrées avec succès',
       );
+      print('User retourné: ${updatedUser.stat}');
       Navigator.pop(context, updatedUser);
     } catch (e) {
-      print('Erreur lors de la sauvegarde: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la sauvegarde: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      MessageService.showError(context, 'Erreur lors de la sauvegarde: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -211,7 +328,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       // Parser la réponse pour obtenir le nouveau chemin de l'image
       final responseData = jsonDecode(result.body);
-      print('Réponse API image: $responseData');
 
       if (responseData['success'] == true &&
           responseData['data'] is List &&
@@ -223,10 +339,60 @@ class _EditUserScreenState extends State<EditUserScreen> {
         }
       }
 
-      print('Structure de réponse non reconnue pour l\'image');
       return null;
     } catch (e) {
       throw e;
+    }
+  }
+
+  Future<Map<String, dynamic>> _updateStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        throw Exception('Token d\'authentification non trouvé');
+      }
+
+      Map<String, dynamic> result;
+
+      if (widget.user.stat.isEmpty) {
+        result = await StatService.create({
+          'userId': widget.user.id,
+          'squat':
+              double.tryParse(_squatController.text.replaceAll(',', '.')) ??
+              0.0,
+          'bench':
+              double.tryParse(_benchController.text.replaceAll(',', '.')) ??
+              0.0,
+          'deadlift':
+              double.tryParse(_deadliftController.text.replaceAll(',', '.')) ??
+              0.0,
+        });
+      } else {
+        result = await StatService.update({
+          'userId': widget.user.id,
+          'squat':
+              double.tryParse(_squatController.text.replaceAll(',', '.')) ??
+              0.0,
+          'bench':
+              double.tryParse(_benchController.text.replaceAll(',', '.')) ??
+              0.0,
+          'deadlift':
+              double.tryParse(_deadliftController.text.replaceAll(',', '.')) ??
+              0.0,
+        });
+      }
+
+      if (result['success'] != true) {
+        throw Exception(
+          'Erreur lors de la mise à jour des stats: ${result['message']}',
+        );
+      }
+
+      return result;
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -325,12 +491,34 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    _buildRoleBadge(widget.user.role),
+                    RoleBadge(role: widget.user.role),
                   ],
                 ),
               ),
 
               const SizedBox(height: 30),
+
+              const SizedBox(height: 16),
+
+              AppTextField(
+                controller: _emailController,
+                labelText: 'Email',
+                hintText: 'adresse@email.com',
+                prefixIcon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+
+              const SizedBox(height: 16),
+
+              AppTextField(
+                controller: _phoneController,
+                labelText: 'Téléphone',
+                hintText: '06 12 34 56 78',
+                prefixIcon: Icons.phone,
+                keyboardType: TextInputType.phone,
+              ),
+
+              const SizedBox(height: 24),
 
               // Section Informations personnelles
               _buildSectionHeader('Informations personnelles', Icons.person),
@@ -346,42 +534,20 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 mainAxisSpacing: 15,
                 childAspectRatio: 2.5,
                 children: [
-                  _buildCompactTextField(
+                  AppTextField(
                     controller: _nameController,
-                    label: 'Nom',
+                    labelText: 'Nom',
                     hintText: 'Nom',
-                    icon: Icons.person,
+                    prefixIcon: Icons.person,
                   ),
-                  _buildCompactTextField(
+                  AppTextField(
                     controller: _surnameController,
-                    label: 'Prénom',
+                    labelText: 'Prénom',
                     hintText: 'Prénom',
-                    icon: Icons.person_outline,
+                    prefixIcon: Icons.person_outline,
                   ),
                 ],
               ),
-
-              const SizedBox(height: 16),
-
-              _buildCompactTextField(
-                controller: _emailController,
-                label: 'Email',
-                hintText: 'adresse@email.com',
-                icon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildCompactTextField(
-                controller: _phoneController,
-                label: 'Téléphone',
-                hintText: '06 12 34 56 78',
-                icon: Icons.phone,
-                keyboardType: TextInputType.phone,
-              ),
-
-              const SizedBox(height: 24),
 
               // Section Détails physiques
               _buildSectionHeader('Détails physiques', Icons.fitness_center),
@@ -396,18 +562,54 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 mainAxisSpacing: 15,
                 childAspectRatio: 2.5,
                 children: [
-                  _buildCompactTextField(
+                  AppTextField(
                     controller: _ageController,
-                    label: 'Âge',
+                    labelText: 'Âge',
                     hintText: '25',
-                    icon: Icons.cake,
+                    prefixIcon: Icons.cake,
                     keyboardType: TextInputType.number,
                   ),
-                  _buildCompactTextField(
+                  AppTextField(
                     controller: _weightController,
-                    label: 'Poids (kg)',
+                    labelText: 'Poids (kg)',
                     hintText: '70',
-                    icon: Icons.monitor_weight,
+                    prefixIcon: Icons.monitor_weight,
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+
+              _buildSectionHeader('Statistiques', Icons.bar_chart),
+
+              const SizedBox(height: 16),
+
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 2.5,
+                children: [
+                  AppTextField(
+                    controller: _squatController,
+                    labelText: 'Squat',
+                    hintText: '25',
+                    prefixIcon: Icons.fitness_center,
+                    keyboardType: TextInputType.number,
+                  ),
+                  AppTextField(
+                    controller: _benchController,
+                    labelText: 'Bench Press',
+                    hintText: '25',
+                    prefixIcon: Icons.fitness_center,
+                    keyboardType: TextInputType.number,
+                  ),
+                  AppTextField(
+                    controller: _deadliftController,
+                    labelText: 'Deadlift',
+                    hintText: '70',
+                    prefixIcon: Icons.fitness_center,
                     keyboardType: TextInputType.number,
                   ),
                 ],
@@ -416,38 +618,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
               const SizedBox(height: 30),
 
               // Bouton de sauvegarde
-              SizedBox(
-                width: double.infinity,
+              AppButton(
+                text: 'Enregistrer les modifications',
+                isFullWidth: true,
                 height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveUserChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.buttonPrimary,
-                    foregroundColor: AppColors.buttonSecondary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: AppColors.buttonSecondary,
-                        )
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.save),
-                            SizedBox(width: 8),
-                            Text(
-                              'Enregistrer les modifications',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
+                isLoading: _isLoading,
+                onPressed: _isLoading ? null : _saveUserChanges,
               ),
             ],
           ),
@@ -478,102 +654,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCompactTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    TextInputType? keyboardType,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.secondary,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hintText,
-          prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.transparent,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          labelStyle: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-          hintStyle: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
-      ),
-    );
-  }
-
-  Widget _buildRoleBadge(String role) {
-    Color badgeColor;
-
-    switch (role) {
-      case 'COACH':
-        badgeColor = AppColors.coach;
-        break;
-      case 'ATHLETE_FULL':
-        badgeColor = AppColors.athleteFull;
-        break;
-      case 'ATHLETE_PROG':
-        badgeColor = AppColors.athleteProg;
-        break;
-      case 'ATHLETE_CO':
-        badgeColor = AppColors.athleteCo;
-        break;
-      default:
-        badgeColor = AppColors.black;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: badgeColor,
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Text(
-        role,
-        style: const TextStyle(
-          color: AppColors.secondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }

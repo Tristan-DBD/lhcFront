@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/screen/create_user.dart';
-import 'package:lhc_front/screen/profile_page.dart';
-import 'package:lhc_front/services/user.dart';
-import '../constant/app_colors.dart';
-import '../models/User.dart';
-import '../utils/image_helper.dart';
+import 'create_user.dart';
+import '../../../shared/presentation/screens/profile_page.dart';
+import '../../../../services/user.dart';
+import '../../../../constant/app_colors.dart';
+import '../../../../models/User.dart';
+import '../../../../utils/image_helper.dart';
+import '../../../../widgets/app_card.dart';
+import '../../../../widgets/role_badge.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -157,7 +159,6 @@ class _ListUserPageState extends State<ListUserPage> {
                         name: '${user['surname'] ?? ''} ${user['name'] ?? ''}'
                             .trim(),
                         role: user['role'] ?? 'Rôle inconnu',
-                        email: user['email'] ?? 'Email inconnu',
                         imageUri:
                             user['imageUri'] ?? 'profileImage/default.png',
                         onPressed: () async {
@@ -198,124 +199,59 @@ class _ListUserPageState extends State<ListUserPage> {
   Widget _buildUserCard({
     required String name,
     required String role,
-    required String email,
     required String imageUri,
     required VoidCallback onPressed,
   }) {
-    return GestureDetector(
+    return AppCard(
       onTap: onPressed,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.secondary,
-          borderRadius: BorderRadius.circular(16.0),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Image de profil
+            Expanded(
+              flex: 4,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: ImageHelper.profileImage(imageUri),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Informations utilisateur
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  RoleBadge(role: role),
+                ],
+              ),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Image de profil
-              Expanded(
-                flex: 4,
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: ImageHelper.profileImage(imageUri),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // Informations utilisateur
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 1),
-                    _buildRoleBadge(role),
-                    const SizedBox(height: 1),
-                    Text(
-                      email,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 8,
-                        color: AppColors.textHint,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleBadge(String role) {
-    Color badgeColor;
-    String displayText = role;
-
-    switch (role) {
-      case 'COACH':
-        badgeColor = AppColors.coach;
-        break;
-      case 'ATHLETE_FULL':
-        badgeColor = AppColors.athleteFull;
-        break;
-      case 'ATHLETE_PROG':
-        badgeColor = AppColors.athleteProg;
-        break;
-      case 'ATHLETE_CO':
-        badgeColor = AppColors.athleteCo;
-        break;
-      default:
-        badgeColor = AppColors.black;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-      decoration: BoxDecoration(
-        color: badgeColor,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        displayText,
-        style: const TextStyle(
-          color: AppColors.secondary,
-          fontSize: 8,
-          fontWeight: FontWeight.bold,
-        ),
-        textAlign: TextAlign.center,
       ),
     );
   }

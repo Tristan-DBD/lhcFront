@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/constant/app_colors.dart';
-import 'package:lhc_front/models/User.dart';
-import 'package:lhc_front/services/program.dart';
-import 'package:lhc_front/services/supabase_storage.dart';
+import '../../../../constant/app_colors.dart';
+import '../../../../models/User.dart';
+import '../../../../services/supabase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../widgets/app_card.dart';
+import '../../../../widgets/app_button.dart';
+import '../../../../utils/message_service.dart';
+import '../../../../services/program_service.dart';
 
 class ProgrammePage extends StatefulWidget {
   const ProgrammePage({super.key, required this.user, this.onProgramsUpdated});
@@ -36,9 +38,16 @@ class _ProgrammePageState extends State<ProgrammePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: Text('Programme'),
+        backgroundColor: AppColors.secondary,
+        title: const Text(
+          'Programme',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
         centerTitle: true,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
@@ -50,8 +59,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Section programmes existants
-            Card(
-              color: AppColors.surface,
+            AppCard(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -116,8 +124,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
             const SizedBox(height: 20),
 
             // Section upload nouveau programme
-            Card(
-              color: AppColors.surface,
+            AppCard(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -132,33 +139,17 @@ class _ProgrammePageState extends State<ProgrammePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ElevatedButton.icon(
+                    AppButton(
+                      text: _isLoading
+                          ? 'Téléchargement...'
+                          : 'Choisir un fichier Excel',
+                      isFullWidth: true,
                       onPressed: _isLoading ? null : _pickAndUploadFile,
-                      icon: _isLoading
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Icon(Icons.upload_file),
-                      label: Text(
-                        _isLoading
-                            ? 'Téléchargement...'
-                            : 'Choisir un fichier Excel',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        minimumSize: Size(double.infinity, 48),
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
-
-            // Messages d'erreur ou succès (remplacés par des SnackBars)
-            // Cette section est maintenant gérée par des SnackBars directement dans les méthodes
           ],
         ),
       ),
@@ -191,12 +182,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
           _isLoading = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: Token d\'authentification non trouvé'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
+        MessageService.showError(
+          context,
+          'Erreur: Token d\'authentification non trouvé',
         );
         return;
       }
@@ -204,10 +192,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
       final response = await _programService.uploadProgram(
         widget.user.id,
         file,
-        token,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response['success'] == true) {
         setState(() {
           _isLoading = false;
         });
@@ -216,12 +203,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
         await _loadPrograms();
 
         // Afficher le message de succès en Snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Programme téléchargé avec succès!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
+        MessageService.showSuccess(
+          context,
+          'Programme téléchargé avec succès!',
         );
       } else {
         setState(() {
@@ -229,12 +213,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
         });
 
         // Afficher le message d'erreur en Snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors du téléchargement: ${response.body}'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
+        MessageService.showError(
+          context,
+          'Erreur lors du téléchargement: ${response['message']}',
         );
       }
     } catch (e) {
@@ -243,13 +224,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
       });
 
       // Afficher le message d'erreur en Snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
-        ),
-      );
+      MessageService.showError(context, 'Erreur: $e');
     }
   }
 
@@ -268,12 +243,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
           _isLoading = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: Token d\'authentification non trouvé'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
+        MessageService.showError(
+          context,
+          'Erreur: Token d\'authentification non trouvé',
         );
         return;
       }
@@ -281,10 +253,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
       final response = await _programService.deleteProgram(
         widget.user.id,
         fileName,
-        token,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 204) {
+      if (response['success'] == true) {
         setState(() {
           _isLoading = false;
         });
@@ -292,24 +263,15 @@ class _ProgrammePageState extends State<ProgrammePage> {
         // Recharger les programmes depuis le serveur pour avoir la liste à jour
         await _loadPrograms();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Programme supprimé avec succès!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        MessageService.showSuccess(context, 'Programme supprimé avec succès!');
       } else {
         setState(() {
           _isLoading = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la suppression: ${response.body}'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
+        MessageService.showError(
+          context,
+          'Erreur lors de la suppression: ${response['message']}',
         );
       }
     } catch (e) {
@@ -317,13 +279,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
-        ),
-      );
+      MessageService.showError(context, 'Erreur: $e');
     }
   }
 
@@ -342,21 +298,14 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
       if (token != null) {
         // Récupérer les programmes depuis le serveur pour avoir les données à jour
-        final response = await _programService.getPrograms(
-          widget.user.id,
-          token,
-        );
+        final response = await _programService.getPrograms(widget.user.id);
 
-        if (response.statusCode == 200) {
+        if (response['success'] == true) {
           // Parser la réponse JSON - le serveur retourne {"success":true,"data":[{"message":[...]}]}
-          final responseData = jsonDecode(response.body);
-
-          if (responseData['success'] == true &&
-              responseData['data'] is List &&
-              responseData['data'].isNotEmpty &&
-              responseData['data'][0]['message'] is List) {
-            final List<dynamic> programsData =
-                responseData['data'][0]['message'];
+          if (response['data'] is List &&
+              response['data'].isNotEmpty &&
+              response['data'][0]['message'] is List) {
+            final List<dynamic> programsData = response['data'][0]['message'];
             final List<Map<String, dynamic>> serverPrograms = programsData
                 .map((item) => item as Map<String, dynamic>)
                 .toList();
@@ -369,10 +318,10 @@ class _ProgrammePageState extends State<ProgrammePage> {
             widget.onProgramsUpdated?.call(_programs);
             return;
           } else {
-            print('Structure de réponse inattendue: $responseData');
+            print('Structure de réponse inattendue: $response');
           }
         } else {
-          print('Erreur HTTP: ${response.statusCode}, Body: ${response.body}');
+          print('Erreur de réponse: $response');
         }
       }
     } catch (e) {
@@ -484,21 +433,12 @@ class _ProgrammePageState extends State<ProgrammePage> {
         );
 
         if (outputPath != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Programme sauvegardé avec succès dans $outputPath'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
+          MessageService.showSuccess(
+            context,
+            'Programme sauvegardé avec succès dans $outputPath',
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Sauvegarde annulée'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          MessageService.showInfo(context, 'Sauvegarde annulée');
         }
 
         // Supprimer le fichier temporaire

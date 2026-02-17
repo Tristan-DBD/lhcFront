@@ -56,7 +56,6 @@ class AppColors {
   static const Color border = Color(0xFFDDDDDD);
   static const Color overlay = Color(0x80000000);
 
-
   // =============================================
   // COULEURS ROLE
   // =============================================
@@ -67,7 +66,7 @@ class AppColors {
   static const Color athleteCo = Color(0xFF2980B9);
 
   // =============================================
-  // COULEURS OPTIONNELLE
+  // COULEURS UTILITAIRES
   // =============================================
   static const Color green = Color(0xFF27AE60);
   static const Color black = Color(0xFF000000);

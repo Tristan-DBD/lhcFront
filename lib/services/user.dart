@@ -1,45 +1,28 @@
-import 'dart:convert';
-
-import 'package:lhc_front/services/api_service.dart';
-import 'package:http/http.dart' as http;
-import 'package:lhc_front/services/storage.dart';
+import 'package:lhc_front/services/http_client.dart';
 
 class UserService {
-  static create(userData) async {
-    try {
-      final user = await http.post(
-        Uri.parse('${ApiService().apiUrl}/user'),
-        headers: ApiService().headers(token: await StorageService.getToken()),
-        body: jsonEncode(userData),
-      );
-      return jsonDecode(user.body);
-    } catch (e) {
-      throw e;
-    }
+  static Future<Map<String, dynamic>> create(userData) async {
+    final httpClient = HttpClient();
+    return await httpClient.post('/user', body: userData);
   }
 
-  static update(int userId, userData) async {
-    try {
-      final user = await http.put(
-        Uri.parse('${ApiService().apiUrl}/user/$userId'),
-        headers: ApiService().headers(token: await StorageService.getToken()),
-        body: jsonEncode(userData),
-      );
-      return jsonDecode(user.body);
-    } catch (e) {
-      throw e;
-    }
+  static Future<Map<String, dynamic>> update(int userId, userData) async {
+    final httpClient = HttpClient();
+    return await httpClient.put('/user/$userId', body: userData);
   }
 
-  static getAll() async {
-    try {
-      final users = await http.get(
-        Uri.parse('${ApiService().apiUrl}/user'),
-        headers: ApiService().headers(token: await StorageService.getToken()),
-      );
-      return jsonDecode(users.body);
-    } catch (e) {
-      throw e;
-    }
+  static Future<Map<String, dynamic>> getAll() async {
+    final httpClient = HttpClient();
+    return await httpClient.get('/user');
+  }
+
+  static Future<Map<String, dynamic>> getUserById(int userId) async {
+    final httpClient = HttpClient();
+    return await httpClient.get('/user/$userId');
+  }
+
+  static Future<Map<String, dynamic>> getAllCoach() async {
+    final httpClient = HttpClient();
+    return await httpClient.get('/user/get-coach');
   }
 }

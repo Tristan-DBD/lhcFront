@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/constant/app_colors.dart';
-import 'package:lhc_front/screen/edit_user.dart';
-import 'package:lhc_front/screen/programme_page.dart';
-import 'package:lhc_front/utils/image_helper.dart';
-import '../models/User.dart';
+import '../../../../constant/app_colors.dart';
+import '../../../user/presentation/screens/edit_user.dart';
+import '../../../user/presentation/screens/programme_page.dart';
+import '../../../../utils/image_helper.dart';
+import '../../../../models/User.dart';
+import '../../../../widgets/app_card.dart';
+import '../../../../widgets/role_badge.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.user});
@@ -58,6 +60,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Si un utilisateur mis à jour est retourné, mettre à jour l'affichage
               if (result != null && result is User) {
+                print(
+                  'ProfilePage: Mise à jour utilisateur avec nouvelles stats: ${result.stat}',
+                );
                 setState(() {
                   _currentUser = result; // Remplacer complètement l'utilisateur
                 });
@@ -74,89 +79,67 @@ class _ProfilePageState extends State<ProfilePage> {
               // Image de profil en grand
               Container(
                 width: double.infinity,
-                height: 250,
+                height: 200,
                 decoration: BoxDecoration(color: AppColors.background),
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.1),
-                            AppColors.background,
-                          ],
+                child: Center(
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(75),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadow.withValues(alpha: 0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
-                      ),
+                      ],
                     ),
-                    Center(
-                      child: Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(75),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow.withValues(alpha: 0.1),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(75),
-                          child: ImageHelper.profileImage(_currentUser.imageUri),
-                        ),
-                      ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(75),
+                      child: ImageHelper.profileImage(_currentUser.imageUri),
                     ),
-                  ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 20),
-
               // Prénom et Nom
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  children: [
-                    Text(
-                      _currentUser.fullName,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        _currentUser.fullName,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildRoleBadge(_currentUser.role),
-                  ],
+                      const SizedBox(height: 8),
+                      RoleBadge(role: _currentUser.role),
+                    ],
+                  ),
                 ),
               ),
 
               const SizedBox(height: 30),
 
+              if (_currentUser.role.toUpperCase() != 'ATHLETE_CO')
+                // Stats de force
+                AppCard(
+                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(children: [_buildStatsRow()]),
+                ),
+              const SizedBox(height: 30),
+
               // Informations supplémentaires
-              Container(
+              AppCard(
                 margin: const EdgeInsets.symmetric(horizontal: 20.0),
                 padding: const EdgeInsets.all(20.0),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  borderRadius: BorderRadius.circular(16.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadow.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
                 child: Column(
                   children: [
                     _buildInfoRow(
@@ -189,20 +172,9 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 30),
 
               if (_currentUser.role.toUpperCase() != 'ATHLETE_CO')
-                Container(
+                AppCard(
                   margin: const EdgeInsets.symmetric(horizontal: 20.0),
                   padding: const EdgeInsets.all(20.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(16.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.shadow.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
                   child: Column(
                     children: [_buildOptionRow(label: 'Programmes')],
                   ),
@@ -287,43 +259,134 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildRoleBadge(String role) {
-    Color badgeColor;
-    String displayText = role;
+  Widget _buildStatsRow() {
+    // Extraire les stats depuis l'utilisateur
+    final squat = _getStatValue('squat');
+    final bench = _getStatValue('bench');
+    final deadlift = _getStatValue('deadlift');
 
-    switch (role) {
-      case 'COACH':
-        badgeColor = AppColors.coach;
-        break;
-      case 'ATHLETE_FULL':
-        badgeColor = AppColors.athleteFull;
-        break;
-      case 'ATHLETE_PROG':
-        badgeColor = AppColors.athleteProg;
-        break;
-      case 'ATHLETE_CO':
-        badgeColor = AppColors.athleteCo;
-        break;
-      default:
-        badgeColor = AppColors.black;
-        break;
+    return Row(
+      children: [
+        // Squat
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                'Squat',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                squat,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+
+        // Séparateur vertical
+        Container(
+          width: 1,
+          height: 60,
+          color: AppColors.textSecondary.withValues(alpha: 0.3),
+        ),
+
+        // Bench Press
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                'Bench',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                bench,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+
+        // Séparateur vertical
+        Container(
+          width: 1,
+          height: 60,
+          color: AppColors.textSecondary.withValues(alpha: 0.3),
+        ),
+
+        // Deadlift
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                'Deadlift',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                deadlift,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getStatValue(String exerciseName) {
+    // Vérifier si l'utilisateur a des stats
+    if (_currentUser.stat.isEmpty) {
+      return '0 kg';
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-      decoration: BoxDecoration(
-        color: badgeColor,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        displayText,
-        style: const TextStyle(
-          color: AppColors.secondary,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
+    // Les stats sont dans le premier élément du tableau avec des propriétés directes
+    final stats = _currentUser.stat.first;
+
+    // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
+    final messageStats = stats['message'] as Map<String, dynamic>?;
+    final finalStats = messageStats ?? stats;
+
+    switch (exerciseName.toLowerCase()) {
+      case 'squat':
+        return '${finalStats['squat'] ?? 0} kg';
+      case 'bench':
+        return '${finalStats['bench'] ?? 0} kg';
+      case 'deadlift':
+        return '${finalStats['deadlift'] ?? 0} kg';
+      default:
+        return '0 kg';
+    }
   }
 }

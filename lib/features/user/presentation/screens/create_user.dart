@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/services/user.dart';
-import '../constant/app_colors.dart';
+import '../../../../services/user.dart';
+import '../../../../constant/app_colors.dart';
+import '../../../../widgets/app_text_field.dart';
+import '../../../../widgets/app_button.dart';
+import '../../../../utils/validators.dart';
 
 class CreateUserScreen extends StatefulWidget {
   const CreateUserScreen({super.key});
@@ -98,7 +101,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             color: AppColors.textPrimary,
           ),
         ),
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.secondary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -119,118 +122,83 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Champ Nom
-            _buildTextField(
+            AppTextField(
               controller: _nameController,
-              label: 'Nom',
+              labelText: 'Nom',
               hintText: 'Entrez le nom',
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un nom';
-                }
-                return null;
-              },
+              prefixIcon: Icons.person,
+              validator: (value) => Validators.name(value, 'nom'),
             ),
 
             const SizedBox(height: 16),
 
             // Champ Prénom
-            _buildTextField(
+            AppTextField(
               controller: _surnameController,
-              label: 'Prénom',
+              labelText: 'Prénom',
               hintText: 'Entrez le prénom',
-              icon: Icons.person_outline,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un prénom';
-                }
-                return null;
-              },
+              prefixIcon: Icons.person_outline,
+              validator: (value) => Validators.name(value, 'prénom'),
             ),
 
             const SizedBox(height: 16),
 
             // Champ Âge
-            _buildTextField(
+            AppTextField(
               controller: _ageController,
-              label: 'Âge',
+              labelText: 'Âge',
               hintText: 'Entrez l\'âge',
-              icon: Icons.cake,
+              prefixIcon: Icons.cake,
               keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un âge';
-                }
-                return null;
-              },
+              validator: Validators.age,
             ),
 
             const SizedBox(height: 16),
 
             // Champ Téléphone
-            _buildTextField(
+            AppTextField(
               controller: _phoneController,
-              label: 'Téléphone',
+              labelText: 'Téléphone',
               hintText: 'Entrez le numéro de téléphone',
-              icon: Icons.phone,
+              prefixIcon: Icons.phone,
               keyboardType: TextInputType.phone,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un numéro de téléphone';
-                }
-                return null;
-              },
+              validator: Validators.phone,
             ),
 
             const SizedBox(height: 16),
 
             // Champ Poids
-            _buildTextField(
+            AppTextField(
               controller: _weightController,
-              label: 'Poids (kg)',
+              labelText: 'Poids (kg)',
               hintText: 'Entrez le poids',
-              icon: Icons.monitor_weight,
+              prefixIcon: Icons.monitor_weight,
               keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un poids';
-                }
-                return null;
-              },
+              validator: Validators.weight,
             ),
 
             const SizedBox(height: 16),
 
             // Champ Email
-            _buildTextField(
+            AppTextField(
               controller: _emailController,
-              label: 'Email',
+              labelText: 'Email',
               hintText: 'Entrez l\'adresse email',
-              icon: Icons.email,
+              prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un email';
-                }
-                return null;
-              },
+              validator: Validators.email,
             ),
 
             const SizedBox(height: 16),
 
             // Champ Mot de passe temporaire
-            _buildTextField(
+            AppTextField(
               controller: _tempPasswordController,
-              label: 'Mot de passe temporaire',
+              labelText: 'Mot de passe temporaire',
               hintText: 'Entrez un mot de passe temporaire',
-              icon: Icons.lock,
+              prefixIcon: Icons.lock,
               obscureText: true,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez entrer un mot de passe temporaire';
-                }
-                return null;
-              },
+              validator: Validators.password,
             ),
 
             const SizedBox(height: 16),
@@ -241,71 +209,16 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
             const SizedBox(height: 30),
 
             // Bouton de création
-            SizedBox(
-              width: double.infinity,
+            AppButton(
+              text: 'Créer l\'utilisateur',
+              isFullWidth: true,
               height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _createUser,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonPrimary,
-                  foregroundColor: AppColors.buttonSecondary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  elevation: 2,
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                        color: AppColors.buttonSecondary,
-                      )
-                    : const Text(
-                        'Créer l\'utilisateur',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
+              isLoading: _isLoading,
+              onPressed: _isLoading ? null : _createUser,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    TextInputType? keyboardType,
-    bool obscureText = false,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: AppColors.textSecondary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: AppColors.inputBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: AppColors.inputBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        filled: true,
-        fillColor: AppColors.inputBackground,
-      ),
-      validator: validator,
     );
   }
 

@@ -75,7 +75,7 @@ class User {
   }
 
   // Getter pour le nom complet
-  String get fullName => '$name $surname'.trim();
+  String get fullName => '$surname $name'.trim();
 
   // Méthode copyWith pour créer une copie avec certaines propriétés modifiées
   User copyWith({
