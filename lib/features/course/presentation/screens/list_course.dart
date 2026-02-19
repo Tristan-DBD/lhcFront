@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/features/course/presentation/screens/add_course.dart';
+import 'package:lhc_front/features/course/presentation/screens/edit_course.dart';
 import 'package:lhc_front/services/user.dart';
 import '../../../../../constant/app_colors.dart';
 import '../../../../../services/course.dart';
@@ -371,23 +372,46 @@ class _ListCoursePageState extends State<ListCoursePage> {
               ),
             ],
           ),
-          trailing: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: _getParticipantColor(
-                nbrRegistration,
-                course['maxParticipants'],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _getParticipantColor(
+                    nbrRegistration,
+                    course['maxParticipants'],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$nbrRegistration/${course['maxParticipants']}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '$nbrRegistration/${course['maxParticipants']}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditCourseScreen(
+                        course: course,
+                        onCourseUpdated: () {
+                          refreshCourses();
+                        },
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.edit, color: AppColors.primary),
+                tooltip: 'Modifier le cours',
               ),
-            ),
+            ],
           ),
           children: [
             Container(
@@ -590,7 +614,7 @@ class _ListCoursePageState extends State<ListCoursePage> {
             Container(
               margin: EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: ListTile(

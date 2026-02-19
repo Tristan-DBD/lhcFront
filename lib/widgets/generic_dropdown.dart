@@ -32,13 +32,19 @@ class _GenericDropdownState<T> extends State<GenericDropdown<T>> {
   @override
   void initState() {
     super.initState();
-    _selectedItem = widget.selectedItem;
+    // Vérifier si selectedItem est dans la liste des items
+    if (widget.selectedItem != null &&
+        widget.items.contains(widget.selectedItem)) {
+      _selectedItem = widget.selectedItem;
+    } else {
+      _selectedItem = null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: _selectedItem,
+      initialValue: _selectedItem,
       decoration: InputDecoration(
         labelText: widget.labelText ?? 'Sélectionner une option',
         hintText: widget.hintText ?? 'Choisir...',

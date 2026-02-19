@@ -88,6 +88,23 @@ class HttpClient {
     }
   }
 
+  /// Effectue une requête DELETE avec corps
+  Future<Map<String, dynamic>> deleteWithBody(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// Gère la réponse HTTP
   Map<String, dynamic> _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
