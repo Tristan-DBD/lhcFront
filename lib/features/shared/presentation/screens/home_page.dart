@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
-import '../../../user/presentation/screens/list_user.dart';
-import '../../../../constant/app_colors.dart';
-import '../../../../widgets/app_card.dart';
-import '../../../../widgets/feature_card.dart';
+import 'package:lhc_front/features/user/presentation/screens/list_user.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/feature_card.dart';
+import '../../../../core/utils/responsive_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,22 +16,22 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'LHC Coaching',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -39,21 +39,20 @@ class _HomePageState extends State<HomePage> {
               AppCard(
                 child: Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Bienvenue !',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'Retrouvez tous vos outils de coaching',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -64,12 +63,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 30),
 
               // Section des fonctionnalités
-              const Text(
+              Text(
                 'Fonctionnalités',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
 
@@ -78,19 +77,19 @@ class _HomePageState extends State<HomePage> {
               // Grid des fonctionnalités
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
+                  crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(context, mobile: 2, tablet: 2),
+                  crossAxisSpacing: ResponsiveHelper.getGridSpacing(context),
+                  mainAxisSpacing: ResponsiveHelper.getGridSpacing(context),
                   children: [
                     FeatureCard(
                       icon: Icons.people,
                       title: 'Liste des utilisateurs',
                       description: 'Gérer les membres',
-                      color: AppColors.black,
+                      color: Theme.of(context).colorScheme.primary,
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (context) => ListUserPage(),
+                            builder: (context) => const ListUserPage(),
                           ),
                         );
                       },
@@ -99,11 +98,11 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.groups,
                       title: 'Cours collectifs',
                       description: 'Planning des sessions',
-                      color: AppColors.green,
+                      color: Theme.of(context).colorScheme.secondary,
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (context) => ListCoursePage(),
+                            builder: (context) => const ListCoursePage(),
                           ),
                         );
                       },

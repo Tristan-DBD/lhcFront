@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../../../models/User.dart';
-import '../../../../services/stat.dart';
-import '../../../../services/user.dart';
-import '../../../../services/supabase_storage.dart';
-import '../../../../utils/image_helper.dart';
+import '../../data/models/user.dart';
+import '../../data/services/stat_service.dart';
+import '../../data/services/user_service.dart';
+import '../../../../core/storage/supabase_storage.dart';
+import '../../../../core/utils/image_helper.dart';
+import '../../../../core/utils/responsive_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../constant/app_colors.dart';
-import '../../../../widgets/app_text_field.dart';
-import '../../../../widgets/app_button.dart';
-import '../../../../widgets/role_badge.dart';
-import '../../../../utils/message_service.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/role_badge.dart';
+import '../../../../core/utils/message_service.dart';
+import '../../../../core/widgets/atoms/section_header.dart';
 
 class EditUserScreen extends StatefulWidget {
-  const EditUserScreen({super.key, required this.user});
+  const EditUserScreen({required this.user, super.key});
 
   final User user;
 
@@ -35,6 +37,17 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late final TextEditingController _squatController;
   late final TextEditingController _benchController;
   late final TextEditingController _deadliftController;
+
+  // Focus nodes pour la navigation entre champs
+  final _emailFocusNode = FocusNode();
+  final _phoneFocusNode = FocusNode();
+  final _nameFocusNode = FocusNode();
+  final _surnameFocusNode = FocusNode();
+  final _ageFocusNode = FocusNode();
+  final _weightFocusNode = FocusNode();
+  final _squatFocusNode = FocusNode();
+  final _benchFocusNode = FocusNode();
+  final _deadliftFocusNode = FocusNode();
 
   bool _isLoading = false;
   File? _newProfileImage;
@@ -81,21 +94,35 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _phoneController.dispose();
     _weightController.dispose();
     _emailController.dispose();
+    _squatController.dispose();
+    _benchController.dispose();
+    _deadliftController.dispose();
+
+    // Nettoyer les focus nodes
+    _emailFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    _nameFocusNode.dispose();
+    _surnameFocusNode.dispose();
+    _ageFocusNode.dispose();
+    _weightFocusNode.dispose();
+    _squatFocusNode.dispose();
+    _benchFocusNode.dispose();
+    _deadliftFocusNode.dispose();
+
     super.dispose();
   }
 
   Future<void> _pickProfileImage() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        allowMultiple: false,
       );
 
       if (result == null || result.files.single.path == null) {
         return;
       }
 
-      File imageFile = File(result.files.single.path!);
+      final File imageFile = File(result.files.single.path!);
 
       setState(() {
         _newProfileImage = imageFile;
@@ -103,17 +130,17 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
+          content: const Text(
             'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
           ),
-          backgroundColor: Colors.blue,
+          backgroundColor: AppColors.current.blue,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.current.error,
         ),
       );
     }
@@ -128,8 +155,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
     try {
       // Comparer les données pour n'envoyer que les champs modifiés
-      Map<String, dynamic> updatedData = {};
-      Map<String, dynamic> updatedStatsData = {};
+      final Map<String, dynamic> updatedData = {};
+      final Map<String, dynamic> updatedStatsData = {};
 
       // Vérifier chaque champ et n'ajouter que s'il a changé
       if (_nameController.text.trim() != widget.user.name) {
@@ -198,13 +225,15 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       // Envoyer les données utilisateur si elles ont changé
       if (updatedData.isNotEmpty) {
-        final result = await UserService.update(widget.user.id, updatedData);
+        final response = await UserService.update(widget.user.id, updatedData);
 
-        if (result['success'] == false) {
+        if (!response.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['data'][0]['message']),
-              backgroundColor: AppColors.error,
+              content: Text(
+                response.errorMessage ?? 'Erreur lors de la mise à jour',
+              ),
+              backgroundColor: AppColors.current.error,
             ),
           );
           setState(() {
@@ -223,7 +252,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
       // Mettre à jour les stats si elles ont été modifiées
       User updatedUser;
       if (updatedStatsData.isNotEmpty) {
-        Map<String, dynamic> updatedStats = await _updateStats();
+        final Map<String, dynamic> updatedStats = await _updateStats();
 
         if (widget.user.stat.isEmpty) {
           // Création de nouvelles stats
@@ -251,7 +280,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
           }
         } else {
           // Mise à jour des stats existantes
-          List<Map<String, dynamic>> newStats = List.from(widget.user.stat);
+          final List<Map<String, dynamic>> newStats = List.from(
+            widget.user.stat,
+          );
           if (updatedStats['data'] is List && updatedStats['data'].isNotEmpty) {
             newStats[0] = {...newStats[0], ...updatedStats['data'][0]};
             updatedUser = widget.user.copyWith(
@@ -293,7 +324,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
         context,
         'Modifications enregistrées avec succès',
       );
-      print('User retourné: ${updatedUser.stat}');
       Navigator.pop(context, updatedUser);
     } catch (e) {
       MessageService.showError(context, 'Erreur lors de la sauvegarde: $e');
@@ -333,7 +363,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
           responseData['data'] is List &&
           responseData['data'].isNotEmpty) {
         // L'API retourne l'objet User complet dans message
-        var message = responseData['data'][0]['message'];
+        final message = responseData['data'][0]['message'];
         if (message is Map && message['imageUri'] != null) {
           return message['imageUri'] as String;
         }
@@ -341,7 +371,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       return null;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -399,20 +429,23 @@ class _EditUserScreenState extends State<EditUserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Modifier le profil',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -433,11 +466,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: AppColors.secondary,
+                            color: AppColors.current.secondary,
                             borderRadius: BorderRadius.circular(50),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadow.withValues(alpha: 0.1),
+                                color: AppColors.current.shadow.withValues(
+                                  alpha: 0.1,
+                                ),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -464,16 +499,16 @@ class _EditUserScreenState extends State<EditUserScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: AppColors.primary,
+                                color: AppColors.current.primary,
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: AppColors.current.white,
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
                                 Icons.camera_alt,
-                                color: Colors.white,
+                                color: AppColors.current.white,
                                 size: 16,
                               ),
                             ),
@@ -484,10 +519,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     const SizedBox(height: 12),
                     Text(
                       widget.user.fullName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.current.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -506,6 +541,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 hintText: 'adresse@email.com',
                 prefixIcon: Icons.email,
                 keyboardType: TextInputType.emailAddress,
+                focusNode: _emailFocusNode,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_phoneFocusNode);
+                },
               ),
 
               const SizedBox(height: 16),
@@ -516,12 +556,20 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 hintText: '06 12 34 56 78',
                 prefixIcon: Icons.phone,
                 keyboardType: TextInputType.phone,
+                focusNode: _phoneFocusNode,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_nameFocusNode);
+                },
               ),
 
               const SizedBox(height: 24),
 
               // Section Informations personnelles
-              _buildSectionHeader('Informations personnelles', Icons.person),
+              const SectionHeader(
+                title: 'Informations personnelles',
+                icon: Icons.person,
+              ),
 
               const SizedBox(height: 16),
 
@@ -529,38 +577,65 @@ class _EditUserScreenState extends State<EditUserScreen> {
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
+                crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
+                  context,
+                  mobile: 1,
+                  tablet: 2,
+                  desktop: 2,
+                ),
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
-                childAspectRatio: 2.5,
+                childAspectRatio: ResponsiveHelper.isMobile(context)
+                    ? 2.0
+                    : 2.5,
                 children: [
                   AppTextField(
                     controller: _nameController,
                     labelText: 'Nom',
                     hintText: 'Nom',
                     prefixIcon: Icons.person,
+                    focusNode: _nameFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_surnameFocusNode);
+                    },
                   ),
                   AppTextField(
                     controller: _surnameController,
                     labelText: 'Prénom',
                     hintText: 'Prénom',
                     prefixIcon: Icons.person_outline,
+                    focusNode: _surnameFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_ageFocusNode);
+                    },
                   ),
                 ],
               ),
 
               // Section Détails physiques
-              _buildSectionHeader('Détails physiques', Icons.fitness_center),
+              const SectionHeader(
+                title: 'Détails physiques',
+                icon: Icons.fitness_center,
+              ),
 
               const SizedBox(height: 16),
 
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
+                crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
+                  context,
+                  mobile: 1,
+                  tablet: 2,
+                  desktop: 2,
+                ),
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
-                childAspectRatio: 2.5,
+                childAspectRatio: ResponsiveHelper.isMobile(context)
+                    ? 2.0
+                    : 2.5,
                 children: [
                   AppTextField(
                     controller: _ageController,
@@ -568,28 +643,46 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     hintText: '25',
                     prefixIcon: Icons.cake,
                     keyboardType: TextInputType.number,
+                    focusNode: _ageFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_weightFocusNode);
+                    },
                   ),
                   AppTextField(
                     controller: _weightController,
                     labelText: 'Poids (kg)',
                     hintText: '70',
-                    prefixIcon: Icons.monitor_weight,
+                    prefixIcon: Icons.fitness_center,
                     keyboardType: TextInputType.number,
+                    focusNode: _weightFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_squatFocusNode);
+                    },
                   ),
                 ],
               ),
 
-              _buildSectionHeader('Statistiques', Icons.bar_chart),
+              // Section Stats
+              const SectionHeader(title: 'Stats', icon: Icons.fitness_center),
 
               const SizedBox(height: 16),
 
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
+                crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
+                  context,
+                  mobile: 1,
+                  tablet: 2,
+                  desktop: 2,
+                ),
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
-                childAspectRatio: 2.5,
+                childAspectRatio: ResponsiveHelper.isMobile(context)
+                    ? 2.0
+                    : 2.5,
                 children: [
                   AppTextField(
                     controller: _squatController,
@@ -597,6 +690,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     hintText: '25',
                     prefixIcon: Icons.fitness_center,
                     keyboardType: TextInputType.number,
+                    focusNode: _squatFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_benchFocusNode);
+                    },
                   ),
                   AppTextField(
                     controller: _benchController,
@@ -604,6 +702,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     hintText: '25',
                     prefixIcon: Icons.fitness_center,
                     keyboardType: TextInputType.number,
+                    focusNode: _benchFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_deadliftFocusNode);
+                    },
                   ),
                   AppTextField(
                     controller: _deadliftController,
@@ -611,6 +714,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     hintText: '70',
                     prefixIcon: Icons.fitness_center,
                     keyboardType: TextInputType.number,
+                    focusNode: _deadliftFocusNode,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      // Soumettre le formulaire quand on appuie sur Entrée
+                      _saveUserChanges();
+                    },
                   ),
                 ],
               ),
@@ -629,31 +738,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
     );
   }
 }

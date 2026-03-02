@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/features/user/presentation/controllers/user_controller.dart';
 import 'create_user.dart';
 import '../../../shared/presentation/screens/profile_page.dart';
-import '../../../../services/user.dart';
-import '../../../../constant/app_colors.dart';
-import '../../../../models/User.dart';
-import '../../../../utils/image_helper.dart';
-import '../../../../widgets/app_card.dart';
-import '../../../../widgets/role_badge.dart';
+import '../../data/models/user.dart';
+import '../../../../core/utils/image_helper.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/role_badge.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -16,183 +16,149 @@ class ListUserPage extends StatefulWidget {
 }
 
 class _ListUserPageState extends State<ListUserPage> {
-  List<Map<String, dynamic>> users = [];
-  String? errorMessage;
-  bool isLoading = true;
+  late final UserController _controller;
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
-  }
-
-  Future<void> _loadUsers() async {
-    try {
-      final response = await UserService.getAll();
-
-      if (response['success'] == false) {
-        setState(() {
-          isLoading = false;
-          errorMessage = response['message'] ?? 'Erreur lors du chargement';
-        });
-        return;
-      }
-
-      // Extraire la liste d'utilisateurs de la réponse
-      List<Map<String, dynamic>> userList;
-
-      if (response['data'] is List && response['data'].isNotEmpty) {
-        userList = List<Map<String, dynamic>>.from(
-          response['data'][0]['message'],
-        );
-        // Trier par ordre croissant de nom
-        userList.sort(
-          (a, b) => (a['surname'] ?? '').compareTo(b['surname'] ?? ''),
-        );
-      } else {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Format de réponse invalide';
-        });
-        return;
-      }
-
-      setState(() {
-        users = userList;
-        isLoading = false;
-        errorMessage = null;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Erreur: $e';
-      });
-    }
+    _controller = UserController();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Liste des utilisateurs',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        backgroundColor: AppColors.secondary,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateUserScreen(),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Liste des utilisateurs',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-              ).then((_) {
-                // Rafraîchir la liste quand on revient de la création
-                _loadUsers();
-              });
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isLoading)
-                const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  ),
-                )
-              else if (users.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 64,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          errorMessage ?? 'Aucun utilisateur trouvé',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreateUserScreen(),
                     ),
-                  ),
-                )
-              else
-                // Grille des utilisateurs
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 0.75,
-                        ),
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      final user = users[index];
-                      return _buildUserCard(
-                        name: '${user['surname'] ?? ''} ${user['name'] ?? ''}'
-                            .trim(),
-                        role: user['role'] ?? 'Rôle inconnu',
-                        imageUri:
-                            user['imageUri'] ?? 'profileImage/default.png',
-                        onPressed: () async {
-                          final userObj = User.fromJson(user);
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProfilePage(user: userObj),
-                            ),
-                          );
-
-                          // Si un utilisateur a été modifié, mettre à jour la liste localement
-                          if (result != null && result is User) {
-                            setState(() {
-                              // Trouver l'index de l'utilisateur dans la liste
-                              final userIndex = users.indexWhere(
-                                (u) => u['id'] == result.id,
-                              );
-
-                              // Si trouvé, mettre à jour les données dans la liste
-                              if (userIndex != -1) {
-                                users[userIndex] = result.toJson();
-                              }
-                            });
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ),
+                  ).then((_) {
+                    _controller.loadUsers();
+                  });
+                },
+              ),
             ],
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(
+                ResponsiveHelper.getHorizontalPadding(context),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_controller.isLoading)
+                    const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_controller.users.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 64,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _controller.errorMessage ??
+                                  'Aucun utilisateur trouvé',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount:
+                              ResponsiveHelper.getGridCrossAxisCount(
+                                context,
+                                mobile: 2,
+                                tablet: 3,
+                              ),
+                          crossAxisSpacing: ResponsiveHelper.getGridSpacing(
+                            context,
+                          ),
+                          mainAxisSpacing: ResponsiveHelper.getGridSpacing(
+                            context,
+                          ),
+                          childAspectRatio: 0.75,
+                        ),
+                        itemCount: _controller.users.length,
+                        itemBuilder: (context, index) {
+                          final user = _controller.users[index];
+                          return _buildUserCard(
+                            name: user.fullName,
+                            role: user.role,
+                            imageUri: user.imageUri,
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(
+                                    user: user,
+                                    canEditPayments:
+                                        _controller.canEditPayments,
+                                  ),
+                                ),
+                              );
+
+                              if (result != null && result is User) {
+                                _controller.updateUserInList(result);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -207,15 +173,13 @@ class _ListUserPageState extends State<ListUserPage> {
       child: Padding(
         padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image de profil
             Expanded(
               flex: 4,
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: ClipRRect(
@@ -224,22 +188,18 @@ class _ListUserPageState extends State<ListUserPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 6),
-
-            // Informations utilisateur
             Expanded(
               flex: 3,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,

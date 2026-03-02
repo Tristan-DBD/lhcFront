@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/services/course.dart';
-import 'package:lhc_front/services/user.dart';
-import 'package:lhc_front/widgets/app_button.dart';
-import 'package:lhc_front/widgets/app_text_field.dart';
-import 'package:lhc_front/widgets/date_time_picker.dart';
-import 'package:lhc_front/widgets/generic_dropdown.dart';
-import '../../../../constant/app_colors.dart';
+import '../../data/services/course_service.dart';
+import '../../../user/data/services/user_service.dart';
+import '../../../user/data/models/user.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/date_time_picker.dart';
+import '../../../../core/widgets/generic_dropdown.dart';
 
 class AddCourseScreen extends StatefulWidget {
   final Function()? onCourseCreated;
@@ -25,7 +26,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   final _maxParticipantsController = TextEditingController();
   DateTime? _courseDateTime;
   int? _selectedCoachId;
-  List<Map<String, dynamic>> _coaches = [];
+  List<User> _coaches = [];
 
   // Focus nodes pour la navigation entre les champs
   final _titleFocusNode = FocusNode();
@@ -56,29 +57,27 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   Future<void> _loadCoaches() async {
     try {
       final response = await UserService.getAllCoach();
-      if (response['success'] == true) {
+      if (response.success && response.data != null) {
         setState(() {
-          _coaches = List<Map<String, dynamic>>.from(
-            response['data'][0]['message'],
-          );
+          _coaches = response.data!;
         });
       }
     } catch (e) {
-      print('Erreur chargement coaches: $e');
+      // Erreur chargement coaches
     }
   }
 
-  _createCourse() async {
+  Future<void> _createCourse() async {
     if (!_formKey.currentState!.validate()) return;
 
     // Vérifier si une date a été sélectionnée
     if (_courseDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
+          content: const Text(
             'Veuillez sélectionner une date et heure pour le cours',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -88,8 +87,8 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
     if (_selectedCoachId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Veuillez sélectionner un coach'),
-          backgroundColor: Colors.red,
+          content: const Text('Veuillez sélectionner un coach'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -108,15 +107,12 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
         'startAt': _courseDateTime!.toIso8601String(),
         'coachId': _selectedCoachId,
       };
-      print(courseData);
-
-      final course = await CourseService.create(courseData);
-      print('résultat de la request: ${course['success']}');
-      if (course['success'] == true) {
+      final response = await CourseService.create(courseData);
+      if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Cours créé avec succès'),
-            backgroundColor: Colors.green,
+            content: const Text('Cours créé avec succès'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
         // Notifier la page parente que le cours a été créé
@@ -127,7 +123,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la création du cours: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     } finally {
@@ -140,20 +136,20 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Ajouter un cours',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
       ),
@@ -163,7 +159,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
   Widget _form() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
       child: Form(
         key: _formKey,
         child: Column(
@@ -220,12 +216,12 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-            GenericDropdown<Map<String, dynamic>>(
+            GenericDropdown<User>(
               items: _coaches,
-              displayString: (coach) => '${coach['name']} ${coach['surname']}',
+              displayString: (coach) => coach.fullName,
               onSelected: (coach) {
                 setState(() {
-                  _selectedCoachId = coach['id'];
+                  _selectedCoachId = coach.id;
                 });
               },
               hintText: 'Sélectionner un coach',
@@ -233,11 +229,13 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
               prefixIcon: Icons.person,
               leadingWidget: (coach) => CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 child: Text(
-                  (coach['name'] ?? '?')[0].toUpperCase(),
+                  coach.name.isNotEmpty ? coach.name[0].toUpperCase() : '?',
                   style: TextStyle(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -253,8 +251,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                 _courseDateTime = dateTime;
               },
               validator: (dateTime) {
-                if (dateTime == null)
+                if (dateTime == null) {
                   return 'Veuillez sélectionner une date et heure';
+                }
                 if (dateTime.isBefore(DateTime.now())) {
                   return 'La date ne peut pas être dans le passé';
                 }

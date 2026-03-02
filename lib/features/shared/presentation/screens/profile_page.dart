@@ -1,53 +1,83 @@
 import 'package:flutter/material.dart';
-import '../../../../constant/app_colors.dart';
+import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../user/presentation/screens/edit_user.dart';
 import '../../../user/presentation/screens/programme_page.dart';
-import '../../../../utils/image_helper.dart';
-import '../../../../models/User.dart';
-import '../../../../widgets/app_card.dart';
-import '../../../../widgets/role_badge.dart';
+import '../../../../core/utils/image_helper.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../user/data/models/user.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/role_badge.dart';
+import '../../../user/presentation/widgets/payment_history_grid.dart';
+import '../../../../core/widgets/atoms/info_tile.dart';
+import '../../../../core/widgets/atoms/stat_display.dart';
+import '../../../../core/theme/user_role.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.user});
+  const ProfilePage({
+    required this.user,
+    super.key,
+    this.canEditPayments = false,
+  });
 
   final User user;
+  final bool canEditPayments;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late User _currentUser; // Variable locale pour gérer l'état
+  late User _currentUser;
+  late Map<String, bool> _payments;
 
   @override
   void initState() {
     super.initState();
-    _currentUser =
-        widget.user; // Initialiser avec l'utilisateur passé en paramètre
+    _currentUser = widget.user;
+    _payments = {
+      'jan': true,
+      'feb': true,
+      'mar': false,
+      'apr': true,
+      'may': true,
+      'jun': true,
+      'jul': true,
+      'aug': false,
+      'sep': true,
+      'oct': true,
+      'nov': true,
+      'dec': true,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Profil',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(
-            context,
-            _currentUser,
-          ), // Retourner l'utilisateur mis à jour
-        ),
+        leading: !UserRole.fromString(_currentUser.role).isCoach
+            ? null
+            : IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.current.textPrimary,
+                ),
+                onPressed: () => Navigator.pop(
+                  context,
+                  _currentUser,
+                ), // Retourner l'utilisateur mis à jour
+              ),
         actions: [
           IconButton(
             onPressed: () async {
@@ -60,15 +90,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Si un utilisateur mis à jour est retourné, mettre à jour l'affichage
               if (result != null && result is User) {
-                print(
-                  'ProfilePage: Mise à jour utilisateur avec nouvelles stats: ${result.stat}',
-                );
                 setState(() {
                   _currentUser = result; // Remplacer complètement l'utilisateur
                 });
               }
             },
-            icon: const Icon(Icons.edit, color: AppColors.textPrimary),
+            icon: Icon(Icons.edit, color: AppColors.current.textPrimary),
           ),
         ],
       ),
@@ -79,17 +106,19 @@ class _ProfilePageState extends State<ProfilePage> {
               // Image de profil en grand
               Container(
                 width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(color: AppColors.background),
+                height: ResponsiveHelper.isMobile(context) ? 150 : 200,
+                decoration: BoxDecoration(color: AppColors.current.background),
                 child: Center(
                   child: Container(
-                    width: 160,
-                    height: 160,
+                    width: ResponsiveHelper.isMobile(context) ? 120 : 160,
+                    height: ResponsiveHelper.isMobile(context) ? 120 : 160,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(75),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadow.withValues(alpha: 0.1),
+                          color: AppColors.current.shadow.withValues(
+                            alpha: 0.1,
+                          ),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -105,21 +134,27 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Prénom et Nom
               AppCard(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveHelper.getHorizontalPadding(context),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.isMobile(context) ? 16 : 20,
+                  ),
                   child: Column(
                     children: [
                       Text(
                         _currentUser.fullName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.current.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
-                      RoleBadge(role: _currentUser.role),
+                      if (_currentUser.role == 'COACH')
+                        RoleBadge(role: _currentUser.role),
                     ],
                   ),
                 ),
@@ -127,40 +162,48 @@ class _ProfilePageState extends State<ProfilePage> {
 
               const SizedBox(height: 30),
 
-              if (_currentUser.role.toUpperCase() != 'ATHLETE_CO')
+              if (_currentUser.role.toUpperCase() == 'ATHLETE_PROG')
                 // Stats de force
                 AppCard(
-                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                  padding: const EdgeInsets.all(20.0),
+                  margin: EdgeInsets.symmetric(
+                    horizontal: ResponsiveHelper.getHorizontalPadding(context),
+                  ),
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.isMobile(context) ? 16 : 20,
+                  ),
                   child: Column(children: [_buildStatsRow()]),
                 ),
-              const SizedBox(height: 30),
+              SizedBox(height: ResponsiveHelper.isMobile(context) ? 20 : 30),
 
               // Informations supplémentaires
               AppCard(
-                margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                padding: const EdgeInsets.all(20.0),
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveHelper.getHorizontalPadding(context),
+                ),
+                padding: EdgeInsets.all(
+                  ResponsiveHelper.isMobile(context) ? 16 : 20,
+                ),
                 child: Column(
                   children: [
-                    _buildInfoRow(
+                    InfoTile(
                       icon: Icons.email,
                       label: 'Email',
                       value: _currentUser.email,
                     ),
                     const SizedBox(height: 16),
-                    _buildInfoRow(
+                    InfoTile(
                       icon: Icons.phone,
                       label: 'Téléphone',
                       value: _currentUser.phone,
                     ),
                     const SizedBox(height: 16),
-                    _buildInfoRow(
+                    InfoTile(
                       icon: Icons.cake,
                       label: 'Âge',
                       value: '${_currentUser.age} ans',
                     ),
                     const SizedBox(height: 16),
-                    _buildInfoRow(
+                    InfoTile(
                       icon: Icons.monitor_weight,
                       label: 'Poids',
                       value: '${_currentUser.weight} kg',
@@ -169,16 +212,60 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
 
-              const SizedBox(height: 30),
-
-              if (_currentUser.role.toUpperCase() != 'ATHLETE_CO')
-                AppCard(
-                  margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [_buildOptionRow(label: 'Programmes')],
-                  ),
+              if (_currentUser.role.toUpperCase().startsWith('ATHLETE')) ...[
+                SizedBox(height: ResponsiveHelper.isMobile(context) ? 20 : 30),
+                PaymentHistoryGrid(
+                  initialPayments: _payments,
+                  isEditable: widget.canEditPayments,
                 ),
+              ],
+
+              SizedBox(height: ResponsiveHelper.isMobile(context) ? 20 : 30),
+
+              AppCard(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveHelper.getHorizontalPadding(context),
+                ),
+                padding: EdgeInsets.all(
+                  ResponsiveHelper.isMobile(context) ? 16 : 20,
+                ),
+                child: Column(
+                  children: [
+                    // si role = COACH, ATHLETE_PROG ou ATHLETE_FULL affiche le bouton pour les programmes
+                    if (_currentUser.role.toUpperCase() == 'ATHLETE_PROG' ||
+                        _currentUser.role.toUpperCase() == 'ATHLETE_FULL' ||
+                        _currentUser.role.toUpperCase() == 'COACH' ||
+                        _currentUser.role.toUpperCase() == 'ADMIN')
+                      _buildOptionRow(
+                        label: 'Programmes',
+                        page: ProgrammePage(
+                          user: _currentUser,
+                          onProgramsUpdated: (updatedPrograms) {
+                            // Mettre à jour l'utilisateur local avec les nouveaux programmes
+                            setState(() {
+                              _currentUser = _currentUser.copyWith(
+                                progUri: updatedPrograms,
+                              );
+                            });
+                          },
+                        ),
+                      ),
+                    if (_currentUser.role.toUpperCase() == 'ATHLETE_CO' ||
+                        _currentUser.role.toUpperCase() == 'ATHLETE_FULL' ||
+                        _currentUser.role.toUpperCase() == 'COACH' ||
+                        _currentUser.role.toUpperCase() == 'ADMIN')
+                      const SizedBox(height: 20),
+                    if (_currentUser.role.toUpperCase() == 'ATHLETE_CO' ||
+                        _currentUser.role.toUpperCase() == 'ATHLETE_FULL' ||
+                        _currentUser.role.toUpperCase() == 'COACH' ||
+                        _currentUser.role.toUpperCase() == 'ADMIN')
+                      _buildOptionRow(
+                        label: 'Cours Collectifs',
+                        page: const ListCoursePage(),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -186,181 +273,35 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOptionRow({required String label}) {
+  Widget _buildOptionRow({required String label, required Widget page}) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProgrammePage(
-              user: _currentUser,
-              onProgramsUpdated: (updatedPrograms) {
-                // Mettre à jour l'utilisateur local avec les nouveaux programmes
-                setState(() {
-                  _currentUser = _currentUser.copyWith(
-                    progUri: updatedPrograms,
-                  );
-                });
-              },
-            ),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => page));
       },
       child: Row(
         children: [
           Text(label),
           const Spacer(),
-          Icon(Icons.arrow_forward_ios, size: 16),
+          const Icon(Icons.arrow_forward_ios, size: 16),
         ],
       ),
     );
   }
 
   Widget _buildStatsRow() {
-    // Extraire les stats depuis l'utilisateur
-    final squat = _getStatValue('squat');
-    final bench = _getStatValue('bench');
-    final deadlift = _getStatValue('deadlift');
-
     return Row(
       children: [
-        // Squat
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                'Squat',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                squat,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+        StatDisplay(
+          label: 'Squat',
+          value: _getStatValue('squat'),
+          showDivider: true,
         ),
-
-        // Séparateur vertical
-        Container(
-          width: 1,
-          height: 60,
-          color: AppColors.textSecondary.withValues(alpha: 0.3),
+        StatDisplay(
+          label: 'Bench',
+          value: _getStatValue('bench'),
+          showDivider: true,
         ),
-
-        // Bench Press
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                'Bench',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                bench,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-
-        // Séparateur vertical
-        Container(
-          width: 1,
-          height: 60,
-          color: AppColors.textSecondary.withValues(alpha: 0.3),
-        ),
-
-        // Deadlift
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                'Deadlift',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                deadlift,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+        StatDisplay(label: 'Deadlift', value: _getStatValue('deadlift')),
       ],
     );
   }

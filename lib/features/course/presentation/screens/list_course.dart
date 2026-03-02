@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/features/course/presentation/screens/add_course.dart';
-import 'package:lhc_front/features/course/presentation/screens/edit_course.dart';
-import 'package:lhc_front/services/user.dart';
-import '../../../../../constant/app_colors.dart';
-import '../../../../../services/course.dart';
-import '../../../../../widgets/role_badge.dart';
+import 'package:lhc_front/features/course/presentation/controllers/course_controller.dart';
+import 'add_course.dart';
+import 'edit_course.dart';
+import '../../../user/data/services/user_service.dart';
+import '../../../user/data/models/user.dart';
+import '../../data/models/course.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../data/services/course_service.dart';
+import '../../../../core/widgets/role_badge.dart';
 
 class ListCoursePage extends StatefulWidget {
   const ListCoursePage({super.key});
@@ -14,259 +17,267 @@ class ListCoursePage extends StatefulWidget {
 }
 
 class _ListCoursePageState extends State<ListCoursePage> {
-  List<Map<String, dynamic>> courses = [];
-  String? errorMessage;
-  bool isLoading = true;
+  late final CourseController _controller;
 
   @override
   void initState() {
     super.initState();
-    _loadCourses();
+    _controller = CourseController();
   }
 
-  // Méthode pour rafraîchir la liste des cours
-  void refreshCourses() {
-    _loadCourses();
-  }
+  Future<void> _handleDelete(int courseId) async {
+    final success = await _controller.deleteCourse(courseId);
+    if (!mounted) return;
 
-  // Méthode pour supprimer un cours
-  Future<void> _deleteCourse(int courseId) async {
-    try {
-      final response = await CourseService.delete(courseId);
-      if (response['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Cours supprimé avec succès'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // Rafraîchir la liste après suppression
-        refreshCourses();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erreur lors de la suppression: ${response['message'] ?? 'Erreur inconnue'}',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la suppression: $e'),
-          backgroundColor: Colors.red,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Cours supprimé avec succès'
+              : 'Erreur lors de la suppression',
         ),
-      );
-    }
-  }
-
-  // Méthode pour formater la date et heure
-  String _formatDateTime(String? dateTimeString) {
-    if (dateTimeString == null || dateTimeString.isEmpty) return '';
-
-    try {
-      final dateTime = DateTime.parse(dateTimeString);
-      // Convertir en heure locale (GMT+1 pour la France)
-      final localDateTime = dateTime.toLocal();
-
-      final date =
-          '${localDateTime.day.toString().padLeft(2, '0')}/${localDateTime.month.toString().padLeft(2, '0')}/${localDateTime.year}';
-      final time =
-          '${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}';
-      return '$date à $time';
-    } catch (e) {
-      return dateTimeString;
-    }
-  }
-
-  Future<void> _loadCourses() async {
-    try {
-      final response = await CourseService.getAll();
-      if (response['success'] == false) {
-        setState(() {
-          isLoading = false;
-          errorMessage = response['message'] ?? 'Erreur lors du chargement';
-        });
-        return;
-      }
-
-      List<Map<String, dynamic>> courseList;
-      if (response['data'] is List && response['data'].isNotEmpty) {
-        courseList = List<Map<String, dynamic>>.from(
-          response['data'][0]['message'],
-        );
-      } else {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Format de réponse invalide';
-        });
-        return;
-      }
-      setState(() {
-        // Trier les cours par date de début (du plus proche au plus lointain)
-        courseList.sort((a, b) {
-          if (a['startAt'] == null && b['startAt'] == null) return 0;
-          if (a['startAt'] == null) return 1;
-          if (b['startAt'] == null) return -1;
-
-          try {
-            final dateA = DateTime.parse(a['startAt']);
-            final dateB = DateTime.parse(b['startAt']);
-            return dateA.compareTo(dateB);
-          } catch (e) {
-            return 0;
-          }
-        });
-
-        courses = courseList;
-        isLoading = false;
-        errorMessage = null;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Erreur: $e';
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Cours collectifs',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.secondary,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddCourseScreen(
-                    onCourseCreated: () {
-                      // Rafraîchir la liste des cours quand un cours est créé
-                      refreshCourses();
-                    },
-                  ),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (isLoading)
-              const Expanded(
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              )
-            else if (courses.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.fitness_center_outlined,
-                        size: 64,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        errorMessage ?? 'Aucun cours trouvé',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Créez votre premier cours en appuyant sur le bouton +',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView(
-                  children: [
-                    ...courses.map(
-                      (course) => FutureBuilder<Widget>(
-                        future: _ExpansionTileBuilder(course),
-                        builder: (constext, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          }
-                          if (snapshot.hasError) {
-                            return Text('Erreur de chargement');
-                          }
-                          return snapshot.data ?? const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+        backgroundColor: success
+            ? AppColors.current.success
+            : AppColors.current.error,
       ),
     );
   }
 
-  Future<Widget> _ExpansionTileBuilder(course) async {
-    final registration = await CourseService.getNbrRegistration(course['id']);
+  Future<void> _handleRegister(int courseId) async {
+    final success = await _controller.registerToCourse(courseId);
+    if (!mounted) return;
 
-    if (registration['success'] == false) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Inscription au cours réussie'
+              : 'Erreur lors de l\'inscription',
+        ),
+        backgroundColor: success
+            ? AppColors.current.success
+            : AppColors.current.error,
+      ),
+    );
+  }
+
+  Future<void> _handleUnregister(int courseId) async {
+    final success = await _controller.unregisterFromCourse(courseId);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Désinscription du cours réussie'
+              : 'Erreur lors de la désinscription',
+        ),
+        backgroundColor: success
+            ? AppColors.current.success
+            : AppColors.current.error,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Cours collectifs',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back),
+            ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddCourseScreen(
+                        onCourseCreated: () => _controller.loadCourses(),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                if (_controller.isLoading)
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.current.primary,
+                      ),
+                    ),
+                  )
+                else if (_controller.courses.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.fitness_center_outlined,
+                            size: 64,
+                            color: AppColors.current.textSecondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _controller.errorMessage ?? 'Aucun cours trouvé',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: AppColors.current.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Créez votre premier cours en appuyant sur le bouton +',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.current.textSecondary.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _controller.courses.length,
+                      itemBuilder: (context, index) {
+                        final course = _controller.courses[index];
+                        return _buildCourseCard(course);
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCourseCard(Course course) {
+    return FutureBuilder<Widget>(
+      future: _ExpansionTileBuilder(course),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return snapshot.data ?? const SizedBox.shrink();
+      },
+    );
+  }
+
+  Future<Widget> _ExpansionTileBuilder(Course course) async {
+    final registration = await CourseService.getNbrRegistration(course.id);
+
+    if (!registration.success) {
       return const Text('Erreur lors du chargement');
     }
 
-    final nbrRegistration = registration['data'][0]['message'].length;
+    final nbrRegistration = registration.data![0]['message'].length;
 
     return Dismissible(
-      key: Key(course['id'].toString()),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      key: Key(course.id.toString()),
+      background:
+          _controller.userRole == 'ADMIN' || _controller.userRole == 'COACH'
+          ? Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.current.orange,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.edit, color: AppColors.current.white, size: 28),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Modifier',
+                    style: TextStyle(
+                      color: AppColors.current.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.current.success,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.how_to_reg,
+                    color: AppColors.current.white,
+                    size: 28,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Register',
+                    style: TextStyle(
+                      color: AppColors.current.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: AppColors.current.error,
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20),
+        padding: const EdgeInsets.only(right: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.delete, color: Colors.white, size: 28),
-            SizedBox(height: 4),
+            Icon(Icons.delete, color: AppColors.current.white, size: 28),
+            const SizedBox(height: 4),
             Text(
-              'Supprimer',
+              _controller.userRole == 'ADMIN' || _controller.userRole == 'COACH'
+                  ? 'Supprimer'
+                  : 'Unregister',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.current.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -274,152 +285,147 @@ class _ListCoursePageState extends State<ListCoursePage> {
           ],
         ),
       ),
-      onDismissed: (direction) {
-        // Supprimer le cours
-        _deleteCourse(course['id']);
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          if (_controller.userRole == 'ADMIN' ||
+              _controller.userRole == 'COACH') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditCourseScreen(
+                  course: course,
+                  onCourseUpdated: () => _controller.loadCourses(),
+                ),
+              ),
+            );
+          } else {
+            _handleRegister(course.id);
+          }
+        } else {
+          if (_controller.userRole == 'ADMIN' ||
+              _controller.userRole == 'COACH') {
+            _handleDelete(course.id);
+          } else {
+            _handleUnregister(course.id);
+          }
+        }
+        return false;
       },
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.current.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: AppColors.current.shadow.withValues(alpha: 0.08),
               blurRadius: 15,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          backgroundColor: Colors.transparent,
-          collapsedBackgroundColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0),
-            side: BorderSide.none,
-          ),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          backgroundColor: AppColors.current.transparent,
+          collapsedBackgroundColor: AppColors.current.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
           title: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.current.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.fitness_center,
-                  color: AppColors.primary,
+                  color: AppColors.current.primary,
                   size: 24,
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      course['title'],
+                      course.title,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: AppColors.current.textPrimary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      course['description'] ?? '',
+                      course.description ?? '',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: AppColors.current.textSecondary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 8),
-                    if (course['startAt'] != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 14,
-                              color: AppColors.primary,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              _formatDateTime(course['startAt']),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
+                      decoration: BoxDecoration(
+                        color: AppColors.current.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            size: 14,
+                            color: AppColors.current.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _controller.formatDateTime(course.startAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.current.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _getParticipantColor(
-                    nbrRegistration,
-                    course['maxParticipants'],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$nbrRegistration/${course['maxParticipants']}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: _getParticipantColor(
+                nbrRegistration,
+                course.maxParticipants,
               ),
-              SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditCourseScreen(
-                        course: course,
-                        onCourseUpdated: () {
-                          refreshCourses();
-                        },
-                      ),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.edit, color: AppColors.primary),
-                tooltip: 'Modifier le cours',
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '$nbrRegistration/${course.maxParticipants}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.current.white,
               ),
-            ],
+            ),
           ),
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.only(
+                color: AppColors.current.background,
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
@@ -428,15 +434,17 @@ class _ListCoursePageState extends State<ListCoursePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.current.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: AppColors.current.shadow.withValues(
+                            alpha: 0.05,
+                          ),
                           blurRadius: 10,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -447,41 +455,54 @@ class _ListCoursePageState extends State<ListCoursePage> {
                           children: [
                             Icon(
                               Icons.people_rounded,
-                              color: AppColors.primary,
+                              color: AppColors.current.primary,
                               size: 20,
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
                               'Participants ($nbrRegistration)',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: AppColors.current.textPrimary,
                               ),
                             ),
-                            Spacer(),
+                            const Spacer(),
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: AppColors.current.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '$nbrRegistration/${course['maxParticipants']}',
+                                '$nbrRegistration/${course.maxParticipants}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
+                                  color: AppColors.current.primary,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
-                        ...(await _buildParticipantCards(registration['data'])),
+                        const SizedBox(height: 16),
+                        FutureBuilder<List<Widget>>(
+                          future: _buildParticipantCards(registration.data!),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            return Column(children: snapshot.data ?? []);
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -497,20 +518,14 @@ class _ListCoursePageState extends State<ListCoursePage> {
   Future<List<Widget>> _buildParticipantCards(
     List<dynamic> registrations,
   ) async {
-    List<Widget> widgets = [];
+    final List<Widget> widgets = [];
 
     for (var registrationItem in registrations) {
-      // Les données sont imbriquées dans 'message'
       final messageList = registrationItem['message'];
-      if (messageList == null || messageList.isEmpty) {
-        continue;
-      }
+      if (messageList == null || messageList.isEmpty) continue;
 
-      // Parcourir TOUS les utilisateurs inscrits dans messageList
       for (var registration in messageList) {
         final userId = registration['userId'];
-
-        // Convertir en int si nécessaire
         int? userIdInt;
         if (userId is int) {
           userIdInt = userId;
@@ -519,131 +534,89 @@ class _ListCoursePageState extends State<ListCoursePage> {
         }
 
         if (userIdInt == null) {
-          widgets.add(
-            Container(
-              margin: EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.grey[300],
-                  child: Icon(Icons.person_outline, color: Colors.grey[600]),
-                ),
-                title: Text('Utilisateur non identifié'),
-                subtitle: Text('ID non disponible'),
-              ),
-            ),
-          );
+          widgets.add(_errorUserCard('Utilisateur non identifié'));
           continue;
         }
 
-        // Récupérer les infos de l'utilisateur
         try {
           final userResponse = await UserService.getUserById(userIdInt);
-
-          if (userResponse['success'] == true && userResponse['data'] != null) {
-            // Les données sont imbriquées dans data[0]['message']
-            final userData = userResponse['data'][0]['message'];
-
-            widgets.add(
-              Container(
-                margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Text(
-                      (userData['name'] ?? '?')[0].toUpperCase(),
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    '${userData['name'] ?? 'Nom non défini'} ${userData['surname'] ?? ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  subtitle: Text(
-                    userData['email'] ?? 'Email non disponible',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  trailing: RoleBadge(role: userData['role'] ?? ''),
-                ),
-              ),
-            );
+          if (userResponse.success && userResponse.data != null) {
+            final user = userResponse.data!;
+            widgets.add(_userCard(user));
           } else {
-            widgets.add(
-              Container(
-                margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.red.withValues(alpha: 0.2),
-                    child: Icon(Icons.error_outline, color: Colors.red[700]),
-                  ),
-                  title: Text('Utilisateur non trouvé'),
-                  subtitle: Text('ID: $userId'),
-                ),
-              ),
-            );
+            widgets.add(_errorUserCard('Utilisateur non trouvé ($userIdInt)'));
           }
         } catch (e) {
-          widgets.add(
-            Container(
-              margin: EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.orange.withValues(alpha: 0.1),
-                  child: Icon(Icons.warning, color: Colors.orange[700]),
-                ),
-                title: Text('Erreur de chargement'),
-                subtitle: Text('Veuillez réessayer'),
-              ),
-            ),
-          );
+          widgets.add(_errorUserCard('Erreur de chargement'));
         }
       }
     }
-
     return widgets;
   }
 
+  Widget _userCard(User user) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.current.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.current.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: AppColors.current.primary.withValues(alpha: 0.1),
+          child: Text(
+            user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+            style: TextStyle(
+              color: AppColors.current.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        title: Text(
+          user.fullName,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppColors.current.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          user.email.isNotEmpty ? user.email : 'Email non disponible',
+          style: TextStyle(
+            color: AppColors.current.textSecondary,
+            fontSize: 14,
+          ),
+        ),
+        trailing: RoleBadge(role: user.role),
+      ),
+    );
+  }
+
+  Widget _errorUserCard(String message) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.current.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: AppColors.current.error.withValues(alpha: 0.2),
+          child: Icon(Icons.error_outline, color: AppColors.current.error),
+        ),
+        title: Text(message),
+      ),
+    );
+  }
+
   Color _getParticipantColor(int current, int max) {
-    double ratio = current / max;
-    if (ratio >= 1.0) {
-      return Colors.red; // Plein
-    } else if (ratio >= 0.8) {
-      return Colors.orange; // Presque plein
-    } else if (ratio >= 0.5) {
-      return AppColors.primary; // Moitié plein
-    } else {
-      return Colors.green; // Beaucoup de places
-    }
+    final double ratio = max > 0 ? current / max : 0;
+    if (ratio >= 1.0) return AppColors.current.error;
+    if (ratio >= 0.8) return AppColors.current.orange;
+    if (ratio >= 0.5) return AppColors.current.primary;
+    return AppColors.grey;
   }
 }

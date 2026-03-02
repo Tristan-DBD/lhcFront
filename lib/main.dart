@@ -2,65 +2,99 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'constant/app_colors.dart';
-import 'features/user/presentation/screens/login_page.dart';
-import 'features/shared/presentation/screens/home_page.dart';
-import 'services/jwt_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/theme/theme_controller.dart';
+import 'core/utils/navigation_helper.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-
-  // Bloquer la rotation en mode portrait uniquement
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
   runApp(const MyApp());
 }
 
 final supabase = Supabase.instance.client;
+final themeController = ThemeController();
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    themeController.init();
+  }
+
+  Key _appKey = UniqueKey();
+  bool _lastIsDark = false;
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'LHC Coaching',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.background,
-      ),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
-      locale: const Locale('fr', 'FR'),
-      home: FutureBuilder<bool>(
-        future: JwtService.isTokenValid(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-          if (snapshot.hasData && snapshot.data == true) {
-            return const HomePage();
-          } else {
-            return const LoginPage();
-          }
-        },
-      ),
-      debugShowCheckedModeBanner: false,
+    final isDark = themeController.isDarkMode;
+    if (isDark != _lastIsDark) {
+      _lastIsDark = isDark;
+      _appKey = UniqueKey();
+    }
+
+    return ListenableBuilder(
+      listenable: themeController,
+      builder: (context, _) {
+        final colors = themeController.colors;
+        return ThemeScope(
+          controller: themeController,
+          child: MaterialApp(
+            key: _appKey,
+            title: 'LHC Coaching',
+            theme: colors.toThemeData(Brightness.light),
+            darkTheme: colors.toThemeData(Brightness.dark),
+            themeMode: themeController.themeMode,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
+            locale: const Locale('fr', 'FR'),
+            home: const AuthWrapper(),
+            debugShowCheckedModeBanner: false,
+          ),
+        );
+      },
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _initializeAuth(context),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
+    );
+  }
+
+  Future<void> _initializeAuth(BuildContext context) async {
+    await NavigationHelper.initNavigation(context);
   }
 }

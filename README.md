@@ -1,16 +1,49 @@
-# lhc_front
+# LHC Coaching - Flutter Front-end
 
-A new Flutter project.
+Application mobile de coaching sportif pour la gestion des cours collectifs, des programmes d'entraînement et du suivi des athlètes.
 
-## Getting Started
+## 🚀 Mise en route
 
-This project is a starting point for a Flutter application.
+### Prérequis
+- Flutter SDK (version ^3.10.7)
+- Dart SDK
+- Un éditeur de code (VS Code ou Android Studio)
 
-A few resources to get you started if this is your first Flutter project:
+### Installation
+1. Cloner le dépôt.
+2. Installer les dépendances :
+   ```bash
+   flutter pub get
+   ```
+3. Créer un fichier `.env` à la racine du projet en vous basant sur `.env.example`.
+4. Lancer l'application :
+   ```bash
+   flutter run
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## ⚙️ Configuration (.env)
+L'application nécessite les variables suivantes :
+- `API_URL` : URL de votre API REST.
+- `SUPABASE_URL` : URL de votre instance Supabase.
+- `SUPABASE_ANON_KEY` : Clé anonyme Supabase.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🏗️ Architecture
+Le projet suit une architecture **Feature-first** (orientée fonctionnalités) pour une meilleure modularité.
+
+### Structure des dossiers
+- `lib/features/` : Modules métiers (user, course, profile).
+- `lib/services/` : Couche d'accès aux données (API, Auth, Storage).
+- `lib/models/` : Modèles de données.
+- `lib/widgets/` : Composants UI réutilisables.
+- `lib/utils/` : Helpers (Navigation, Responsive).
+
+### Gestion d'état
+- Utilisation de **ChangeNotifier** avec le pattern **Controller** pour séparer la logique métier de l'UI (ex: `CourseController`).
+- **ListenableBuilder** pour la mise à jour réactive de l'interface.
+
+## 🎨 Design System
+L'application supporte le **mode sombre** nativement. Les couleurs et styles sont centralisés dans `lib/constant/app_theme.dart`.
+
+## 🛠️ Optimisations Recommendations
+- **API Cache** : Éviter les appels redondants en mettant en cache les données utilisateur.
+- **Batching** : Privilégier les requêtes groupées pour les listes (ex: participants d'un cours) afin d'éviter le problème de "N+1 queries".

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../services/user.dart';
-import '../../../../constant/app_colors.dart';
-import '../../../../widgets/app_text_field.dart';
-import '../../../../widgets/app_button.dart';
-import '../../../../utils/validators.dart';
+import 'package:lhc_front/features/user/presentation/controllers/user_controller.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/utils/validators.dart';
 
 class CreateUserScreen extends StatefulWidget {
   const CreateUserScreen({super.key});
@@ -14,18 +15,32 @@ class CreateUserScreen extends StatefulWidget {
 
 class _CreateUserScreenState extends State<CreateUserScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final UserController _controller;
+
+  // Controllers
   final _nameController = TextEditingController();
   final _surnameController = TextEditingController();
   final _ageController = TextEditingController();
   final _phoneController = TextEditingController();
   final _weightController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _tempPasswordController = TextEditingController();
+
+  // Focus nodes pour la navigation entre champs
+  final _nameFocusNode = FocusNode();
+  final _surnameFocusNode = FocusNode();
+  final _ageFocusNode = FocusNode();
+  final _phoneFocusNode = FocusNode();
+  final _weightFocusNode = FocusNode();
 
   String _selectedRole = 'ATHLETE_PROG';
   bool _isLoading = false;
 
   final List<String> _roles = ['ATHLETE_PROG', 'ATHLETE_CO', 'ATHLETE_FULL'];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = UserController();
+  }
 
   @override
   void dispose() {
@@ -34,8 +49,6 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
     _ageController.dispose();
     _phoneController.dispose();
     _weightController.dispose();
-    _emailController.dispose();
-    _tempPasswordController.dispose();
     super.dispose();
   }
 
@@ -53,59 +66,82 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         'age': int.parse(_ageController.text),
         'phone': _phoneController.text.trim(),
         'weight': int.parse(_weightController.text),
-        'email': _emailController.text.trim(),
-        'password': _tempPasswordController.text.trim(),
         'role': _selectedRole,
       };
 
-      final user = await UserService.create(userData);
-      print('Utilisateur créé: $user');
-      if (user['success'] == false) {
+      final result = await _controller.createUser(userData);
+
+      if (!result.success) {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(user['data'][0]['message']),
-            backgroundColor: AppColors.error,
-          ),
-        );
+
+        if (mounted) {
+          final message = result.errorMessage ?? 'Erreur lors de la création';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(message)),
+                ],
+              ),
+              backgroundColor: AppColors.current.error,
+              duration: const Duration(seconds: 5),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       } else {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Utilisateur créé avec succès'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Utilisateur créé avec succès'),
+              backgroundColor: AppColors.current.success,
+            ),
+          );
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
-      print('Erreur: $e');
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: AppColors.current.error,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Création d\'un utilisateur',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -115,100 +151,79 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
 
   Widget _buildForm() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Champ Nom
             AppTextField(
               controller: _nameController,
               labelText: 'Nom',
               hintText: 'Entrez le nom',
               prefixIcon: Icons.person,
+              focusNode: _nameFocusNode,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) {
+                FocusScope.of(context).requestFocus(_surnameFocusNode);
+              },
               validator: (value) => Validators.name(value, 'nom'),
             ),
-
             const SizedBox(height: 16),
-
-            // Champ Prénom
             AppTextField(
               controller: _surnameController,
               labelText: 'Prénom',
               hintText: 'Entrez le prénom',
               prefixIcon: Icons.person_outline,
+              focusNode: _surnameFocusNode,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) {
+                FocusScope.of(context).requestFocus(_ageFocusNode);
+              },
               validator: (value) => Validators.name(value, 'prénom'),
             ),
-
             const SizedBox(height: 16),
-
-            // Champ Âge
             AppTextField(
               controller: _ageController,
               labelText: 'Âge',
               hintText: 'Entrez l\'âge',
               prefixIcon: Icons.cake,
               keyboardType: TextInputType.number,
+              focusNode: _ageFocusNode,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) {
+                FocusScope.of(context).requestFocus(_phoneFocusNode);
+              },
               validator: Validators.age,
             ),
-
             const SizedBox(height: 16),
-
-            // Champ Téléphone
             AppTextField(
               controller: _phoneController,
               labelText: 'Téléphone',
               hintText: 'Entrez le numéro de téléphone',
               prefixIcon: Icons.phone,
               keyboardType: TextInputType.phone,
+              focusNode: _phoneFocusNode,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) {
+                FocusScope.of(context).requestFocus(_weightFocusNode);
+              },
               validator: Validators.phone,
             ),
-
             const SizedBox(height: 16),
-
-            // Champ Poids
             AppTextField(
               controller: _weightController,
               labelText: 'Poids (kg)',
               hintText: 'Entrez le poids',
               prefixIcon: Icons.monitor_weight,
               keyboardType: TextInputType.number,
+              focusNode: _weightFocusNode,
+              textInputAction: TextInputAction.next,
               validator: Validators.weight,
             ),
-
             const SizedBox(height: 16),
-
-            // Champ Email
-            AppTextField(
-              controller: _emailController,
-              labelText: 'Email',
-              hintText: 'Entrez l\'adresse email',
-              prefixIcon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-              validator: Validators.email,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Champ Mot de passe temporaire
-            AppTextField(
-              controller: _tempPasswordController,
-              labelText: 'Mot de passe temporaire',
-              hintText: 'Entrez un mot de passe temporaire',
-              prefixIcon: Icons.lock,
-              obscureText: true,
-              validator: Validators.password,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Champ Rôle
             _buildRoleDropdown(),
-
             const SizedBox(height: 30),
-
-            // Bouton de création
             AppButton(
               text: 'Créer l\'utilisateur',
               isFullWidth: true,
@@ -226,12 +241,12 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Rôle',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: AppColors.current.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -239,9 +254,9 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.inputBorder),
+            border: Border.all(color: AppColors.current.inputBorder),
             borderRadius: BorderRadius.circular(8.0),
-            color: AppColors.inputBackground,
+            color: AppColors.current.inputBackground,
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -261,8 +276,8 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                       Expanded(
                         child: Text(
                           _getRoleDisplayName(role),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.current.textPrimary,
                             fontSize: 16,
                           ),
                         ),
@@ -286,41 +301,23 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
   }
 
   IconData _getRoleIcon(String role) {
-    switch (role) {
-      case 'ATHLETE_FULL':
-        return Icons.fitness_center;
-      case 'ATHLETE_PROG':
-        return Icons.trending_up;
-      case 'ATHLETE_CO':
-        return Icons.sports;
-      default:
-        return Icons.person;
-    }
+    if (role == 'ATHLETE_FULL') return Icons.fitness_center;
+    if (role == 'ATHLETE_PROG') return Icons.trending_up;
+    if (role == 'ATHLETE_CO') return Icons.sports;
+    return Icons.person;
   }
 
   Color _getRoleColor(String role) {
-    switch (role) {
-      case 'ATHLETE_FULL':
-        return AppColors.athleteFull;
-      case 'ATHLETE_PROG':
-        return AppColors.athleteProg;
-      case 'ATHLETE_CO':
-        return AppColors.athleteCo;
-      default:
-        return AppColors.textSecondary;
-    }
+    if (role == 'ATHLETE_FULL') return AppColors.current.athleteFull;
+    if (role == 'ATHLETE_PROG') return AppColors.current.athleteProg;
+    if (role == 'ATHLETE_CO') return AppColors.current.athleteCo;
+    return AppColors.current.textSecondary;
   }
 
   String _getRoleDisplayName(String role) {
-    switch (role) {
-      case 'ATHLETE_FULL':
-        return 'Athlète Programme + Collectif';
-      case 'ATHLETE_PROG':
-        return 'Athlète Programme';
-      case 'ATHLETE_CO':
-        return 'Athlète Collectif';
-      default:
-        return role;
-    }
+    if (role == 'ATHLETE_FULL') return 'Athlète Programme + Collectif';
+    if (role == 'ATHLETE_PROG') return 'Athlète Programme';
+    if (role == 'ATHLETE_CO') return 'Athlète Collectif';
+    return role;
   }
 }

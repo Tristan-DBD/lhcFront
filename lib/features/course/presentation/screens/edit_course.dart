@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/services/course.dart';
-import 'package:lhc_front/services/user.dart';
-import 'package:lhc_front/widgets/app_button.dart';
-import 'package:lhc_front/widgets/app_text_field.dart';
-import 'package:lhc_front/widgets/date_time_picker.dart';
-import 'package:lhc_front/widgets/generic_dropdown.dart';
-import '../../../../constant/app_colors.dart';
+import '../../../user/data/models/user.dart';
+import '../../data/models/course.dart';
+import '../../data/services/course_service.dart';
+import '../../../user/data/services/user_service.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/date_time_picker.dart';
+import '../../../../core/widgets/generic_dropdown.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class EditCourseScreen extends StatefulWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final Function()? onCourseUpdated;
 
   const EditCourseScreen({
-    super.key,
     required this.course,
+    super.key,
     this.onCourseUpdated,
   });
 
@@ -22,17 +25,21 @@ class EditCourseScreen extends StatefulWidget {
 }
 
 class _EditCourseScreenState extends State<EditCourseScreen> {
-  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
+
+  // Variables d'état
+  bool _isLoading = false;
+  DateTime? _courseDateTime;
+  int? _selectedCoachId;
+  List<User> _coaches = [];
+
+  // Controllers
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _durationController;
   late final TextEditingController _maxParticipantsController;
-  DateTime? _courseDateTime;
-  int? _selectedCoachId;
-  List<Map<String, dynamic>> _coaches = [];
 
-  // Focus nodes pour la navigation entre les champs
+  // Focus nodes pour la navigation entre champs
   final _titleFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _durationFocusNode = FocusNode();
@@ -46,27 +53,18 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   }
 
   void _initializeFields() {
-    _titleController = TextEditingController(
-      text: widget.course['title'] ?? '',
-    );
+    _titleController = TextEditingController(text: widget.course.title);
     _descriptionController = TextEditingController(
-      text: widget.course['description'] ?? '',
+      text: widget.course.description ?? '',
     );
     _durationController = TextEditingController(
-      text: widget.course['durationMinutes']?.toString() ?? '',
+      text: widget.course.durationMinutes.toString(),
     );
     _maxParticipantsController = TextEditingController(
-      text: widget.course['maxParticipants']?.toString() ?? '',
+      text: widget.course.maxParticipants.toString(),
     );
-    _selectedCoachId = widget.course['coachId'];
-
-    if (widget.course['startAt'] != null) {
-      try {
-        _courseDateTime = DateTime.parse(widget.course['startAt']);
-      } catch (e) {
-        print('Erreur parsing date: $e');
-      }
-    }
+    _selectedCoachId = widget.course.coachId;
+    _courseDateTime = widget.course.startAt;
   }
 
   @override
@@ -85,15 +83,13 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   Future<void> _loadCoaches() async {
     try {
       final response = await UserService.getAllCoach();
-      if (response['success'] == true) {
+      if (response.success && response.data != null) {
         setState(() {
-          _coaches = List<Map<String, dynamic>>.from(
-            response['data'][0]['message'],
-          );
+          _coaches = response.data!;
         });
       }
     } catch (e) {
-      print('Erreur chargement coaches: $e');
+      // Erreur chargement coaches
     }
   }
 
@@ -116,16 +112,13 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
         if (_selectedCoachId != null) 'coachId': _selectedCoachId,
       };
 
-      final response = await CourseService.update(
-        widget.course['id'],
-        courseData,
-      );
+      final response = await CourseService.update(widget.course.id, courseData);
 
-      if (response['success'] == true) {
+      if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Cours mis à jour avec succès'),
-            backgroundColor: Colors.green,
+            content: const Text('Cours mis à jour avec succès'),
+            backgroundColor: AppColors.current.success,
           ),
         );
         widget.onCourseUpdated?.call();
@@ -134,9 +127,9 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Erreur lors de la mise à jour: ${response['message'] ?? 'Erreur inconnue'}',
+              'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.current.error,
           ),
         );
       }
@@ -144,7 +137,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la mise à jour du cours: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.current.error,
         ),
       );
     } finally {
@@ -157,20 +150,20 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Modifier un cours',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppColors.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
       ),
@@ -180,7 +173,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
 
   Widget _form() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
       child: Form(
         key: _formKey,
         child: Column(
@@ -237,12 +230,12 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
               },
             ),
             const SizedBox(height: 16),
-            GenericDropdown<Map<String, dynamic>>(
+            GenericDropdown<User>(
               items: _coaches,
-              displayString: (coach) => '${coach['name']} ${coach['surname']}',
+              displayString: (coach) => coach.fullName,
               onSelected: (coach) {
                 setState(() {
-                  _selectedCoachId = coach['id'];
+                  _selectedCoachId = coach.id;
                 });
               },
               hintText: 'Sélectionner un coach',
@@ -250,11 +243,13 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
               prefixIcon: Icons.person,
               leadingWidget: (coach) => CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                backgroundColor: AppColors.current.primary.withValues(
+                  alpha: 0.1,
+                ),
                 child: Text(
-                  (coach['name'] ?? '?')[0].toUpperCase(),
+                  coach.name.isNotEmpty ? coach.name[0].toUpperCase() : '?',
                   style: TextStyle(
-                    color: AppColors.primary,
+                    color: AppColors.current.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -262,7 +257,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
               ),
               selectedItem: _coaches.isNotEmpty
                   ? _coaches.firstWhere(
-                      (coach) => coach['id'] == _selectedCoachId,
+                      (coach) => coach.id == _selectedCoachId,
                       orElse: () => _coaches.first,
                     )
                   : null,
@@ -277,8 +272,9 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                 _courseDateTime = dateTime;
               },
               validator: (dateTime) {
-                if (dateTime == null)
+                if (dateTime == null) {
                   return 'Veuillez sélectionner une date et heure';
+                }
                 if (dateTime.isBefore(DateTime.now())) {
                   return 'La date ne peut pas être dans le passé';
                 }

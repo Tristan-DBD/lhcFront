@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../../../constant/app_colors.dart';
-import '../../../../models/User.dart';
-import '../../../../services/supabase_storage.dart';
+import '../../data/models/user.dart';
+import '../../../../core/storage/supabase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../widgets/app_card.dart';
-import '../../../../widgets/app_button.dart';
-import '../../../../utils/message_service.dart';
-import '../../../../services/program_service.dart';
+import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/utils/message_service.dart';
+import '../../data/services/program_service.dart';
 
 class ProgrammePage extends StatefulWidget {
-  const ProgrammePage({super.key, required this.user, this.onProgramsUpdated});
+  const ProgrammePage({required this.user, super.key, this.onProgramsUpdated});
 
   final User user;
   final Function(List<Map<String, dynamic>>)? onProgramsUpdated;
@@ -36,25 +36,28 @@ class _ProgrammePageState extends State<ProgrammePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.secondary,
-        title: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(
           'Programme',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -70,19 +73,21 @@ class _ProgrammePageState extends State<ProgrammePage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
                     if (_programs.isEmpty)
                       Text(
                         'Aucun programme téléchargé',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       )
                     else
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: _programs.length,
                         itemBuilder: (context, index) {
                           final program = _programs[index];
@@ -92,7 +97,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
                           return ListTile(
                             title: Text(
                               programName,
-                              style: TextStyle(color: AppColors.textPrimary),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -100,14 +107,19 @@ class _ProgrammePageState extends State<ProgrammePage> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.download,
-                                    color: AppColors.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                   onPressed: () => _showDownloadConfirmation(
                                     program['fileUri'] ?? program['name'],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  icon: Icon(
+                                    Icons.delete,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                   onPressed: () =>
                                       _showDeleteConfirmation(program['name']),
                                 ),
@@ -135,7 +147,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -162,10 +174,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
         _isLoading = true;
       });
 
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
-        allowMultiple: false,
       );
 
       if (result == null || result.files.single.path == null) {
@@ -173,9 +184,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
         return;
       }
 
-      File file = File(result.files.single.path!);
+      final File file = File(result.files.single.path!);
 
-      String? token = await _getToken();
+      final String? token = await _getToken();
 
       if (token == null) {
         setState(() {
@@ -194,7 +205,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         file,
       );
 
-      if (response['success'] == true) {
+      if (response.success) {
         setState(() {
           _isLoading = false;
         });
@@ -215,7 +226,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         // Afficher le message d'erreur en Snackbar
         MessageService.showError(
           context,
-          'Erreur lors du téléchargement: ${response['message']}',
+          'Erreur lors du téléchargement: ${response.errorMessage}',
         );
       }
     } catch (e) {
@@ -236,7 +247,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         _isLoading = true;
       });
 
-      String? token = await _getToken();
+      final String? token = await _getToken();
 
       if (token == null) {
         setState(() {
@@ -255,7 +266,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         fileName,
       );
 
-      if (response['success'] == true) {
+      if (response.success) {
         setState(() {
           _isLoading = false;
         });
@@ -271,7 +282,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
         MessageService.showError(
           context,
-          'Erreur lors de la suppression: ${response['message']}',
+          'Erreur lors de la suppression: ${response.errorMessage}',
         );
       }
     } catch (e) {
@@ -294,19 +305,15 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
   Future<void> _loadPrograms() async {
     try {
-      String? token = await _getToken();
+      final String? token = await _getToken();
 
       if (token != null) {
         // Récupérer les programmes depuis le serveur pour avoir les données à jour
         final response = await _programService.getPrograms(widget.user.id);
 
-        if (response['success'] == true) {
-          // Parser la réponse JSON - le serveur retourne {"success":true,"data":[{"message":[...]}]}
-          if (response['data'] is List &&
-              response['data'].isNotEmpty &&
-              response['data'][0]['message'] is List) {
-            final List<dynamic> programsData = response['data'][0]['message'];
-            final List<Map<String, dynamic>> serverPrograms = programsData
+        if (response.success == true) {
+          if (response.data != null) {
+            final List<Map<String, dynamic>> serverPrograms = response.data!
                 .map((item) => item as Map<String, dynamic>)
                 .toList();
 
@@ -318,14 +325,14 @@ class _ProgrammePageState extends State<ProgrammePage> {
             widget.onProgramsUpdated?.call(_programs);
             return;
           } else {
-            print('Structure de réponse inattendue: $response');
+            // Structure de réponse inattendue
           }
         } else {
-          print('Erreur de réponse: $response');
+          // Erreur de réponse
         }
       }
     } catch (e) {
-      print('Erreur lors du chargement des programmes depuis le serveur: $e');
+      // Erreur lors du chargement des programmes
     }
 
     // En cas d'erreur, utiliser les données locales de l'utilisateur
@@ -341,17 +348,19 @@ class _ProgrammePageState extends State<ProgrammePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmer la suppression'),
+          title: const Text('Confirmer la suppression'),
           content: Text(
             'Êtes-vous sûr de vouloir supprimer le programme "${_formatProgramName(fileName)}" ?',
           ),
-          backgroundColor: AppColors.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Annuler',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             TextButton(
@@ -359,7 +368,10 @@ class _ProgrammePageState extends State<ProgrammePage> {
                 Navigator.of(context).pop();
                 _deleteProgram(fileName);
               },
-              child: Text('Supprimer', style: TextStyle(color: Colors.red)),
+              child: Text(
+                'Supprimer',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
           ],
         );
@@ -374,17 +386,19 @@ class _ProgrammePageState extends State<ProgrammePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmer le téléchargement'),
+          title: const Text('Confirmer le téléchargement'),
           content: Text(
             'Voulez-vous télécharger le programme "${_formatProgramName(fileName)}" ?',
           ),
-          backgroundColor: AppColors.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Annuler',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             TextButton(
@@ -394,7 +408,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
               },
               child: Text(
                 'Télécharger',
-                style: TextStyle(color: AppColors.primary),
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ],
@@ -424,7 +438,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
       if (file != null) {
         // Laisser l'utilisateur choisir où sauvegarder le fichier
-        String? outputPath = await FilePicker.platform.saveFile(
+        final String? outputPath = await FilePicker.platform.saveFile(
           dialogTitle: 'Sauvegarder le programme',
           fileName: fileName,
           type: FileType.custom,
@@ -446,9 +460,10 @@ class _ProgrammePageState extends State<ProgrammePage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors du téléchargement: fichier non trouvé'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
+            content: const Text(
+              'Erreur lors du téléchargement: fichier non trouvé',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -460,8 +475,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 4),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
