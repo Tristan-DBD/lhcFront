@@ -113,11 +113,7 @@ class _ListUserPageState extends State<ListUserPage> {
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount:
-                              ResponsiveHelper.getGridCrossAxisCount(
-                                context,
-                                mobile: 2,
-                                tablet: 3,
-                              ),
+                              ResponsiveHelper.getGridCrossAxisCount(context),
                           crossAxisSpacing: ResponsiveHelper.getGridSpacing(
                             context,
                           ),

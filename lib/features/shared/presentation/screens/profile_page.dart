@@ -12,6 +12,7 @@ import '../../../user/presentation/widgets/payment_history_grid.dart';
 import '../../../../core/widgets/atoms/info_tile.dart';
 import '../../../../core/widgets/atoms/stat_display.dart';
 import '../../../../core/theme/user_role.dart';
+import '../../../user/data/services/payment_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -35,20 +36,73 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _currentUser = widget.user;
-    _payments = {
-      'jan': true,
-      'feb': true,
-      'mar': false,
-      'apr': true,
-      'may': true,
-      'jun': true,
-      'jul': true,
-      'aug': false,
-      'sep': true,
-      'oct': true,
-      'nov': true,
-      'dec': true,
-    };
+    _initializePayments();
+  }
+
+  void _initializePayments() {
+    final currentYear = DateTime.now().year;
+    // Trouver les paiements pour l'année en cours
+    final paymentYear = _currentUser.payments.firstWhere(
+      (p) => p['year'] == currentYear,
+      orElse: () => {},
+    );
+
+    if (paymentYear.isNotEmpty && paymentYear['status'] != null) {
+      _payments = Map<String, bool>.from(paymentYear['status']);
+    } else {
+      // Fallback si pas de données
+      _payments = {
+        'jan': false,
+        'feb': false,
+        'mar': false,
+        'apr': false,
+        'may': false,
+        'jun': false,
+        'jul': false,
+        'aug': false,
+        'sep': false,
+        'oct': false,
+        'nov': false,
+        'dec': false,
+      };
+    }
+  }
+
+  Future<void> _handlePaymentToggle(String month) async {
+    final currentYear = DateTime.now().year;
+    final response = await PaymentService.toggleMonth(
+      userId: _currentUser.id,
+      year: currentYear,
+      month: month,
+    );
+
+    if (!response.success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.errorMessage ?? 'Erreur inconnue')),
+        );
+        // Revert local state if needed (the widget already toggled it visually)
+        setState(() {
+          _initializePayments();
+        });
+      }
+    } else {
+      // Mettre à jour l'utilisateur local avec les nouvelles données de paiement
+      final updatedPayments = List<Map<String, dynamic>>.from(
+        _currentUser.payments,
+      );
+      final index = updatedPayments.indexWhere((p) => p['year'] == currentYear);
+      if (index != -1) {
+        updatedPayments[index] = response.data!;
+      } else {
+        updatedPayments.add(response.data!);
+      }
+
+      setState(() {
+        _currentUser = _currentUser.copyWith(payments: updatedPayments);
+        _initializePayments();
+      });
+    }
   }
 
   @override
@@ -217,6 +271,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 PaymentHistoryGrid(
                   initialPayments: _payments,
                   isEditable: widget.canEditPayments,
+                  onMonthTap: _handlePaymentToggle,
                 ),
               ],
 

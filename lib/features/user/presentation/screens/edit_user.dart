@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/user.dart';
 import '../../data/services/stat_service.dart';
 import '../../data/services/user_service.dart';
+import '../../../../core/api/api_response.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
@@ -56,8 +57,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
   void initState() {
     super.initState();
     // Initialiser les contrôleurs avec les données de l'utilisateur
-    _nameController = TextEditingController(text: widget.user.name);
-    _surnameController = TextEditingController(text: widget.user.surname);
+    _nameController = TextEditingController(text: widget.user.surname);
+    _surnameController = TextEditingController(text: widget.user.name);
     _ageController = TextEditingController(text: widget.user.age.toString());
     _phoneController = TextEditingController(text: widget.user.phone);
     _weightController = TextEditingController(
@@ -159,11 +160,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
       final Map<String, dynamic> updatedStatsData = {};
 
       // Vérifier chaque champ et n'ajouter que s'il a changé
-      if (_nameController.text.trim() != widget.user.name) {
-        updatedData['name'] = _nameController.text.trim();
+      if (_surnameController.text.trim() != widget.user.name) {
+        updatedData['name'] = _surnameController.text.trim();
       }
-      if (_surnameController.text.trim() != widget.user.surname) {
-        updatedData['surname'] = _surnameController.text.trim();
+      if (_nameController.text.trim() != widget.user.surname) {
+        updatedData['surname'] = _nameController.text.trim();
       }
       if (_emailController.text.trim() != widget.user.email) {
         updatedData['email'] = _emailController.text.trim();
@@ -250,9 +251,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
       }
 
       // Mettre à jour les stats si elles ont été modifiées
-      User updatedUser;
+      User updatedUser = widget.user;
       if (updatedStatsData.isNotEmpty) {
-        final Map<String, dynamic> updatedStats = await _updateStats();
+        final Map<String, dynamic>? updatedStatsResult = await _updateStats();
+        if (updatedStatsResult == null) return;
+        final updatedStats = updatedStatsResult;
 
         if (widget.user.stat.isEmpty) {
           // Création de nouvelles stats
@@ -310,13 +313,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
       } else {
         // Pas de modification de stats, créer l'utilisateur avec les données de base uniquement
         updatedUser = widget.user.copyWith(
-          name: updatedData['name'],
-          surname: updatedData['surname'],
-          email: updatedData['email'],
-          phone: updatedData['phone'],
-          age: updatedData['age'],
-          weight: updatedData['weight'],
-          imageUri: newImagePath,
+          name: updatedData['name'] ?? widget.user.name,
+          surname: updatedData['surname'] ?? widget.user.surname,
+          email: updatedData['email'] ?? widget.user.email,
+          phone: updatedData['phone'] ?? widget.user.phone,
+          age: updatedData['age'] ?? widget.user.age,
+          weight: updatedData['weight'] ?? widget.user.weight,
+          imageUri: newImagePath ?? widget.user.imageUri,
         );
       }
 
@@ -324,13 +327,19 @@ class _EditUserScreenState extends State<EditUserScreen> {
         context,
         'Modifications enregistrées avec succès',
       );
-      Navigator.pop(context, updatedUser);
+      if (mounted) {
+        Navigator.pop(context, updatedUser);
+      }
     } catch (e) {
-      MessageService.showError(context, 'Erreur lors de la sauvegarde: $e');
+      if (mounted) {
+        MessageService.showError(context, 'Erreur lors de la sauvegarde: $e');
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -375,16 +384,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
     }
   }
 
-  Future<Map<String, dynamic>> _updateStats() async {
+  Future<Map<String, dynamic>?> _updateStats() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null) {
-        throw Exception('Token d\'authentification non trouvé');
-      }
-
-      Map<String, dynamic> result;
+      ApiResponse<Map<String, dynamic>> result;
 
       if (widget.user.stat.isEmpty) {
         result = await StatService.create({
@@ -414,13 +416,17 @@ class _EditUserScreenState extends State<EditUserScreen> {
         });
       }
 
-      if (result['success'] != true) {
+      if (!result.success) {
         throw Exception(
-          'Erreur lors de la mise à jour des stats: ${result['message']}',
+          result.errorMessage ?? 'Erreur lors de la mise à jour des stats',
         );
       }
 
-      return result;
+      // Pour la compatibilité avec le reste de _saveUserChanges, on retourne formaté
+      return {
+        'success': true,
+        'data': [result.data],
+      };
     } catch (e) {
       rethrow;
     }
@@ -531,9 +537,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 ),
               ),
 
-              const SizedBox(height: 30),
-
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               AppTextField(
                 controller: _emailController,
@@ -563,9 +567,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Section Informations personnelles
               const SectionHeader(
                 title: 'Informations personnelles',
                 icon: Icons.person,
@@ -573,7 +576,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
               const SizedBox(height: 16),
 
-              // Grid pour les champs
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -583,11 +585,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   tablet: 2,
                   desktop: 2,
                 ),
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 8,
                 childAspectRatio: ResponsiveHelper.isMobile(context)
-                    ? 2.0
-                    : 2.5,
+                    ? 5.5
+                    : 6.0,
                 children: [
                   AppTextField(
                     controller: _nameController,
@@ -614,7 +616,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 ],
               ),
 
-              // Section Détails physiques
               const SectionHeader(
                 title: 'Détails physiques',
                 icon: Icons.fitness_center,
@@ -632,10 +633,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   desktop: 2,
                 ),
                 crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+                mainAxisSpacing: 8,
                 childAspectRatio: ResponsiveHelper.isMobile(context)
-                    ? 2.0
-                    : 2.5,
+                    ? 5.5
+                    : 6.0,
                 children: [
                   AppTextField(
                     controller: _ageController,
@@ -664,7 +665,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 ],
               ),
 
-              // Section Stats
               const SectionHeader(title: 'Stats', icon: Icons.fitness_center),
 
               const SizedBox(height: 16),
@@ -679,10 +679,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   desktop: 2,
                 ),
                 crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+                mainAxisSpacing: 8,
                 childAspectRatio: ResponsiveHelper.isMobile(context)
-                    ? 2.0
-                    : 2.5,
+                    ? 5.5
+                    : 6.0,
                 children: [
                   AppTextField(
                     controller: _squatController,
@@ -717,16 +717,14 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     focusNode: _deadliftFocusNode,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) {
-                      // Soumettre le formulaire quand on appuie sur Entrée
                       _saveUserChanges();
                     },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
-              // Bouton de sauvegarde
               AppButton(
                 text: 'Enregistrer les modifications',
                 isFullWidth: true,

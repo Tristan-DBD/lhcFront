@@ -16,8 +16,12 @@ class UserService {
         final userMap = data['message'] ?? data;
         return ApiResponse.success(User.fromJson(userMap));
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la création',
+        errorMessage ?? response['message'] ?? 'Erreur lors de la création',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());
@@ -39,8 +43,12 @@ class UserService {
         final userMap = data['message'] ?? data;
         return ApiResponse.success(User.fromJson(userMap));
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la mise à jour',
+        errorMessage ?? response['message'] ?? 'Erreur lors de la mise à jour',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());
@@ -54,11 +62,22 @@ class UserService {
 
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> dataList = response['data'];
+        if (dataList.isNotEmpty && dataList[0]['message'] is List) {
+          final List<dynamic> usersData = dataList[0]['message'];
+          final users = usersData.map((json) => User.fromJson(json)).toList();
+          return ApiResponse.success(users);
+        }
+        // Fallback si la structure est directe
         final users = dataList.map((json) => User.fromJson(json)).toList();
         return ApiResponse.success(users);
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ??
+        errorMessage ??
+            response['message'] ??
             'Erreur lors de la récupération des utilisateurs',
       );
     } catch (e) {
@@ -71,13 +90,20 @@ class UserService {
       final httpClient = HttpClient();
       final response = await httpClient.get('/user/$userId');
 
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        // Si c'est une liste, on prend le premier élément
-        final userMap = (data is List && data.isNotEmpty) ? data[0] : data;
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final data = response['data'][0];
+        final userMap = data['message'] ?? data;
         return ApiResponse.success(User.fromJson(userMap));
       }
-      return ApiResponse.error(response['message'] ?? 'Utilisateur non trouvé');
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
+      return ApiResponse.error(
+        errorMessage ?? response['message'] ?? 'Utilisateur non trouvé',
+      );
     } catch (e) {
       return ApiResponse.error(e.toString());
     }
@@ -90,11 +116,23 @@ class UserService {
 
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> dataList = response['data'];
+        if (dataList.isNotEmpty && dataList[0]['message'] is List) {
+          final List<dynamic> usersData = dataList[0]['message'];
+          final users = usersData.map((json) => User.fromJson(json)).toList();
+          return ApiResponse.success(users);
+        }
+        // Fallback
         final users = dataList.map((json) => User.fromJson(json)).toList();
         return ApiResponse.success(users);
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la récupération des coachs',
+        errorMessage ??
+            response['message'] ??
+            'Erreur lors de la récupération des coachs',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());

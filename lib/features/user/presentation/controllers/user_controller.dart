@@ -59,8 +59,8 @@ class UserController extends ChangeNotifier {
     }
   }
 
-  Future<ApiResponse<User>> createUser(Map<String, dynamic> userData) async {
-    return await UserService.create(userData);
+  Future<ApiResponse<User>> createUser(Map<String, dynamic> userData) {
+    return UserService.create(userData);
   }
 
   void updateUserInList(User updatedUser) {

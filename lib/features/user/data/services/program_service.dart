@@ -77,8 +77,15 @@ class ProgramService {
       if (responseBody['success'] == true) {
         return ApiResponse.success(null);
       }
+      String? errorMessage;
+      if (responseBody['data'] != null &&
+          (responseBody['data'] as List).isNotEmpty) {
+        errorMessage = responseBody['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        responseBody['message'] ?? 'Erreur lors de la suppression',
+        errorMessage ??
+            responseBody['message'] ??
+            'Erreur lors de la suppression',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());
@@ -93,8 +100,15 @@ class ProgramService {
       if (responseBody['success'] == true && responseBody['data'] != null) {
         return ApiResponse.success(responseBody['data'] as List<dynamic>);
       }
+      String? errorMessage;
+      if (responseBody['data'] != null &&
+          (responseBody['data'] as List).isNotEmpty) {
+        errorMessage = responseBody['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        responseBody['message'] ?? 'Erreur lors de la récupération',
+        errorMessage ??
+            responseBody['message'] ??
+            'Erreur lors de la récupération',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());

@@ -79,7 +79,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
                     const SizedBox(height: 12),
                     if (_programs.isEmpty)
                       Text(
-                        'Aucun programme téléchargé',
+                        'Pas de programme',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -115,14 +115,19 @@ class _ProgrammePageState extends State<ProgrammePage> {
                                     program['fileUri'] ?? program['name'],
                                   ),
                                 ),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.delete,
-                                    color: Theme.of(context).colorScheme.error,
+                                if (widget.user.role == 'COACH' ||
+                                    widget.user.role == 'ADMIN')
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.delete,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
+                                    onPressed: () => _showDeleteConfirmation(
+                                      program['name'],
+                                    ),
                                   ),
-                                  onPressed: () =>
-                                      _showDeleteConfirmation(program['name']),
-                                ),
                               ],
                             ),
                           );
@@ -136,32 +141,33 @@ class _ProgrammePageState extends State<ProgrammePage> {
             const SizedBox(height: 20),
 
             // Section upload nouveau programme
-            AppCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ajouter un programme',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
+            if (widget.user.role == 'COACH' || widget.user.role == 'ADMIN')
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ajouter un programme',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    AppButton(
-                      text: _isLoading
-                          ? 'Téléchargement...'
-                          : 'Choisir un fichier Excel',
-                      isFullWidth: true,
-                      onPressed: _isLoading ? null : _pickAndUploadFile,
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      AppButton(
+                        text: _isLoading
+                            ? 'Téléchargement...'
+                            : 'Choisir un fichier Excel',
+                        isFullWidth: true,
+                        onPressed: _isLoading ? null : _pickAndUploadFile,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

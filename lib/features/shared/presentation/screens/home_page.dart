@@ -31,7 +31,9 @@ class _HomePageState extends State<HomePage> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(ResponsiveHelper.getHorizontalPadding(context)),
+          padding: EdgeInsets.all(
+            ResponsiveHelper.getHorizontalPadding(context),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -77,7 +79,9 @@ class _HomePageState extends State<HomePage> {
               // Grid des fonctionnalités
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(context, mobile: 2, tablet: 2),
+                  crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
+                    context,
+                  ),
                   crossAxisSpacing: ResponsiveHelper.getGridSpacing(context),
                   mainAxisSpacing: ResponsiveHelper.getGridSpacing(context),
                   children: [

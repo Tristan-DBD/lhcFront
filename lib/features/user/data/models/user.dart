@@ -10,6 +10,7 @@ class User {
   final List<Map<String, dynamic>> stat;
   final String imageUri;
   final List<Map<String, dynamic>> progUri;
+  final List<Map<String, dynamic>> payments;
 
   User({
     required this.id,
@@ -23,6 +24,7 @@ class User {
     required this.stat,
     required this.imageUri,
     required this.progUri,
+    required this.payments,
   });
 
   // Factory constructor pour créer un User depuis JSON
@@ -42,8 +44,16 @@ class User {
           .toList();
     }
 
+    List<Map<String, dynamic>> paymentList = [];
+    if (json['payments'] != null) {
+      final paymentData = json['payments'] as List;
+      paymentList = paymentData
+          .map((item) => item as Map<String, dynamic>)
+          .toList();
+    }
+
     return User(
-      id: json['id'] as int,
+      id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '',
       surname: json['surname'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -54,6 +64,7 @@ class User {
       stat: statList,
       imageUri: json['imageUri'] as String? ?? 'default.png',
       progUri: progUriList,
+      payments: paymentList,
     );
   }
 
@@ -71,6 +82,7 @@ class User {
       'stat': stat,
       'imageUri': imageUri,
       'progUri': progUri,
+      'payments': payments,
     };
   }
 
@@ -90,6 +102,7 @@ class User {
     List<Map<String, dynamic>>? stat,
     String? imageUri,
     List<Map<String, dynamic>>? progUri,
+    List<Map<String, dynamic>>? payments,
   }) {
     return User(
       id: id ?? this.id,
@@ -103,6 +116,7 @@ class User {
       stat: stat ?? this.stat,
       imageUri: imageUri ?? this.imageUri,
       progUri: progUri ?? this.progUri,
+      payments: payments ?? this.payments,
     );
   }
 

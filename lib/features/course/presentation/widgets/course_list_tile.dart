@@ -1,0 +1,296 @@
+import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../data/models/course.dart';
+import '../controllers/course_controller.dart';
+import 'participant_card.dart';
+
+class CourseListTile extends StatelessWidget {
+  final Course course;
+  final CourseController controller;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onRegister;
+  final VoidCallback onUnregister;
+
+  const CourseListTile({
+    required this.course,
+    required this.controller,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onRegister,
+    required this.onUnregister,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isFull = course.registrationCount >= course.maxParticipants;
+    final bool isUserRegistered = course.isUserRegistered(controller.userId);
+    final bool canManage =
+        controller.userRole == 'ADMIN' || controller.userRole == 'COACH';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.current.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.current.shadow.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        backgroundColor: AppColors.current.transparent,
+        collapsedBackgroundColor: AppColors.current.transparent,
+        title: _buildTitle(context),
+        trailing: _buildTrailing(isFull),
+        children: [_buildDetails(context, canManage, isUserRegistered, isFull)],
+      ),
+    );
+  }
+
+  Widget _buildTitle(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.current.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.fitness_center,
+            color: AppColors.current.primary,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                course.title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.current.textPrimary,
+                ),
+              ),
+              if (course.description != null && course.description!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    course.description!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.current.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              _buildTimeBadge(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimeBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.current.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.schedule, size: 14, color: AppColors.current.primary),
+          const SizedBox(width: 6),
+          Text(
+            controller.formatDateTime(course.startAt),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.current.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrailing(bool isFull) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _getParticipantColor(
+          course.registrationCount,
+          course.maxParticipants,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '${course.registrationCount}/${course.maxParticipants}',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppColors.current.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetails(
+    BuildContext context,
+    bool canManage,
+    bool isRegistered,
+    bool isFull,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.current.background,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!canManage) _buildActionButtons(isRegistered, isFull),
+          const SizedBox(height: 16),
+          _buildParticipantSection(canManage),
+          if (canManage) ...[const SizedBox(height: 16), _buildAdminActions()],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(bool isRegistered, bool isFull) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isRegistered ? onUnregister : (isFull ? null : onRegister),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isRegistered
+              ? AppColors.current.error
+              : AppColors.current.success,
+          foregroundColor: AppColors.current.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          isRegistered
+              ? 'Se désinscrire'
+              : (isFull ? 'Complet' : 'S\'inscrire'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParticipantSection(bool canManage) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.current.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.current.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.people_rounded,
+                color: AppColors.current.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Participants (${course.registrationCount})',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.current.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (course.registrations.isEmpty)
+            const Text('Aucun participant pour le moment.')
+          else
+            ...course.registrations
+                .map((reg) => ParticipantCard(user: reg.user!))
+                .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text('Modifier'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.current.orange,
+              side: BorderSide(color: AppColors.current.orange),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete, size: 18),
+            label: const Text('Supprimer'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.current.error,
+              side: BorderSide(color: AppColors.current.error),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getParticipantColor(int current, int max) {
+    final double ratio = max > 0 ? current / max : 0;
+    if (ratio >= 1.0) return AppColors.current.error;
+    if (ratio >= 0.8) return AppColors.current.orange;
+    if (ratio >= 0.5) return AppColors.current.primary;
+    return AppColors.grey;
+  }
+}

@@ -61,8 +61,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
 
     try {
       final userData = {
-        'name': _nameController.text.trim(),
-        'surname': _surnameController.text.trim(),
+        'name':
+            _surnameController.text, // Le backend attend le Prénom dans 'name'
+        'surname': _nameController
+            .text, // Le backend attend le Nom dans 'surname'.trim(),
         'age': int.parse(_ageController.text),
         'phone': _phoneController.text.trim(),
         'weight': int.parse(_weightController.text),

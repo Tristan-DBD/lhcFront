@@ -1,5 +1,5 @@
+import 'package:lhc_front/core/api/api_response.dart';
 import '../models/course.dart';
-import '../../../../core/api/api_response.dart';
 import '../../../../core/api/http_client.dart';
 
 class CourseService {
@@ -18,8 +18,14 @@ class CourseService {
         final courseMap = data['message'] ?? data;
         return ApiResponse.success(Course.fromJson(courseMap));
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la création du cours',
+        errorMessage ??
+            response['message'] ??
+            'Erreur lors de la création du cours',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());
@@ -31,13 +37,24 @@ class CourseService {
       final httpClient = HttpClient();
       final response = await httpClient.get('/course');
 
-      if (response['success'] == true && response['data'] != null) {
-        final List<dynamic> dataList = response['data'];
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final data = response['data'][0];
+        final List<dynamic> dataList = data['message'] is List
+            ? data['message']
+            : [];
         final courses = dataList.map((json) => Course.fromJson(json)).toList();
         return ApiResponse.success(courses);
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la récupération des cours',
+        errorMessage ??
+            response['message'] ??
+            'Erreur lors de la récupération des cours',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());
@@ -55,8 +72,13 @@ class CourseService {
         final List<dynamic> dataList = response['data'];
         return ApiResponse.success(dataList);
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ??
+        errorMessage ??
+            response['message'] ??
             'Erreur lors de la récupération des inscriptions',
       );
     } catch (e) {
@@ -95,12 +117,20 @@ class CourseService {
       final httpClient = HttpClient();
       final response = await httpClient.get('/course/$courseId');
 
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        final courseMap = (data is List && data.isNotEmpty) ? data[0] : data;
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final data = response['data'][0];
+        final courseMap = data['message'] ?? data;
         return ApiResponse.success(Course.fromJson(courseMap));
       }
-      return ApiResponse.error(response['message'] ?? 'Cours non trouvé');
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
+      return ApiResponse.error(
+        errorMessage ?? response['message'] ?? 'Cours non trouvé',
+      );
     } catch (e) {
       return ApiResponse.error(e.toString());
     }
@@ -124,8 +154,14 @@ class CourseService {
         final courseMap = data['message'] ?? data;
         return ApiResponse.success(Course.fromJson(courseMap));
       }
+      String? errorMessage;
+      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
+        errorMessage = response['data'][0]['message']?.toString();
+      }
       return ApiResponse.error(
-        response['message'] ?? 'Erreur lors de la mise à jour du cours',
+        errorMessage ??
+            response['message'] ??
+            'Erreur lors de la mise à jour du cours',
       );
     } catch (e) {
       return ApiResponse.error(e.toString());

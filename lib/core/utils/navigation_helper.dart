@@ -9,23 +9,27 @@ import '../../features/user/data/services/user_service.dart';
 
 class NavigationHelper {
   static Future<void> initNavigation(BuildContext context) async {
-    final bool isLoggedIn = await JwtService.isTokenValid();
+    try {
+      final bool isLoggedIn = await JwtService.isTokenValid();
 
-    if (isLoggedIn) {
-      final roleStr = await JwtService.getUserRole() ?? '';
-      final role = UserRole.fromString(roleStr);
+      if (isLoggedIn) {
+        final roleStr = await JwtService.getUserRole() ?? '';
+        final role = UserRole.fromString(roleStr);
 
-      if (role.isCoach || role.isAdmin) {
-        navigator(context, const HomePage());
-      } else {
-        final loggedUser = await getUserData();
-        if (loggedUser != null) {
-          navigator(context, ProfilePage(user: loggedUser));
+        if (role.isCoach || role.isAdmin) {
+          navigator(context, const HomePage());
         } else {
-          navigator(context, const LoginPage());
+          final loggedUser = await getUserData();
+          if (loggedUser != null) {
+            navigator(context, ProfilePage(user: loggedUser));
+          } else {
+            navigator(context, const LoginPage());
+          }
         }
+      } else {
+        navigator(context, const LoginPage());
       }
-    } else {
+    } catch (e) {
       navigator(context, const LoginPage());
     }
   }
