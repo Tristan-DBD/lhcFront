@@ -132,7 +132,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar( 
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
             'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
@@ -472,9 +472,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
                             borderRadius: BorderRadius.circular(50),
                             boxShadow: [
                               BoxShadow(
-                                color: Theme.of(context).colorScheme.shadow.withValues(
-                                  alpha: 0.1,
-                                ),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.shadow.withValues(alpha: 0.1),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -504,13 +504,15 @@ class _EditUserScreenState extends State<EditUserScreen> {
                                 color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
                                 Icons.camera_alt,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 size: 16,
                               ),
                             ),

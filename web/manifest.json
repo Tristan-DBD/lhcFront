@@ -1,11 +1,11 @@
 {
-    "name": "lhc_front",
-    "short_name": "lhc_front",
+    "name": "LHC Coaching",
+    "short_name": "LHC Coaching",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "LHC Coaching",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
