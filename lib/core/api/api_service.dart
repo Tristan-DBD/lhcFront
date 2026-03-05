@@ -1,12 +1,9 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart';
 
 class ApiService {
   final String apiUrl = dotenv.env['API_URL']!;
 
-  ApiService() {
-    debugPrint('API URL: $apiUrl');
-  }
+  ApiService() {}
 
   // Headers communs pour les requêtes
   Map<String, String> headers({String? token}) {

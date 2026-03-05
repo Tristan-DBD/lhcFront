@@ -9,6 +9,7 @@ import '../../../../core/utils/responsive_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -34,13 +35,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late final TextEditingController _ageController;
   late final TextEditingController _phoneController;
   late final TextEditingController _weightController;
-  late final TextEditingController _emailController;
   late final TextEditingController _squatController;
   late final TextEditingController _benchController;
   late final TextEditingController _deadliftController;
 
   // Focus nodes pour la navigation entre champs
-  final _emailFocusNode = FocusNode();
   final _phoneFocusNode = FocusNode();
   final _nameFocusNode = FocusNode();
   final _surnameFocusNode = FocusNode();
@@ -52,6 +51,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
   bool _isLoading = false;
   File? _newProfileImage;
+  Uint8List? _newProfileImageBytes;
+  String? _newProfileImageName;
 
   @override
   void initState() {
@@ -64,7 +65,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _weightController = TextEditingController(
       text: widget.user.weight.toString(),
     );
-    _emailController = TextEditingController(text: widget.user.email);
     if (widget.user.stat.isEmpty) {
       _squatController = TextEditingController(text: '0');
       _benchController = TextEditingController(text: '0');
@@ -94,13 +94,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _ageController.dispose();
     _phoneController.dispose();
     _weightController.dispose();
-    _emailController.dispose();
     _squatController.dispose();
     _benchController.dispose();
     _deadliftController.dispose();
 
     // Nettoyer les focus nodes
-    _emailFocusNode.dispose();
     _phoneFocusNode.dispose();
     _nameFocusNode.dispose();
     _surnameFocusNode.dispose();
@@ -117,19 +115,25 @@ class _EditUserScreenState extends State<EditUserScreen> {
     try {
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
+        withData: true,
       );
 
-      if (result == null || result.files.single.path == null) {
-        return;
-      }
+      if (result == null) return;
 
-      final File imageFile = File(result.files.single.path!);
+      final PlatformFile pickedFile = result.files.single;
 
       setState(() {
-        _newProfileImage = imageFile;
+        _newProfileImageBytes = pickedFile.bytes;
+        _newProfileImageName = pickedFile.name;
+
+        // Pour la compatibilité avec le code existant qui pourrait utiliser File
+        // Note: Sur Web, result.files.single.path est null, ce qui causait l'erreur
+        if (pickedFile.path != null) {
+          _newProfileImage = File(pickedFile.path!);
+        }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar( 
         SnackBar(
           content: const Text(
             'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
@@ -165,9 +169,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
       }
       if (_nameController.text.trim() != widget.user.surname) {
         updatedData['surname'] = _nameController.text.trim();
-      }
-      if (_emailController.text.trim() != widget.user.email) {
-        updatedData['email'] = _emailController.text.trim();
       }
       if (_phoneController.text.trim() != widget.user.phone) {
         updatedData['phone'] = _phoneController.text.trim();
@@ -246,7 +247,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       // Gérer l'image de profil séparément si elle a changé
       String? newImagePath;
-      if (_newProfileImage != null) {
+      if (_newProfileImageBytes != null) {
         newImagePath = await _updateProfileImage();
       }
 
@@ -263,7 +264,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
             updatedUser = widget.user.copyWith(
               name: updatedData['name'],
               surname: updatedData['surname'],
-              email: updatedData['email'],
               phone: updatedData['phone'],
               age: updatedData['age'],
               weight: updatedData['weight'],
@@ -274,7 +274,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
             updatedUser = widget.user.copyWith(
               name: updatedData['name'],
               surname: updatedData['surname'],
-              email: updatedData['email'],
               phone: updatedData['phone'],
               age: updatedData['age'],
               weight: updatedData['weight'],
@@ -291,7 +290,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
             updatedUser = widget.user.copyWith(
               name: updatedData['name'],
               surname: updatedData['surname'],
-              email: updatedData['email'],
               phone: updatedData['phone'],
               age: updatedData['age'],
               weight: updatedData['weight'],
@@ -302,7 +300,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
             updatedUser = widget.user.copyWith(
               name: updatedData['name'],
               surname: updatedData['surname'],
-              email: updatedData['email'],
               phone: updatedData['phone'],
               age: updatedData['age'],
               weight: updatedData['weight'],
@@ -315,7 +312,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
         updatedUser = widget.user.copyWith(
           name: updatedData['name'] ?? widget.user.name,
           surname: updatedData['surname'] ?? widget.user.surname,
-          email: updatedData['email'] ?? widget.user.email,
           phone: updatedData['phone'] ?? widget.user.phone,
           age: updatedData['age'] ?? widget.user.age,
           weight: updatedData['weight'] ?? widget.user.weight,
@@ -355,7 +351,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       final result = await _storageService.updateProfileImage(
         widget.user.id,
-        _newProfileImage!,
+        _newProfileImageBytes!,
+        _newProfileImageName!,
         token,
       );
 
@@ -486,9 +483,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: _newProfileImage != null
-                                ? Image.file(
-                                    _newProfileImage!,
+                            child: _newProfileImageBytes != null
+                                ? Image.memory(
+                                    _newProfileImageBytes!,
                                     fit: BoxFit.cover,
                                   )
                                 : ImageHelper.profileImage(
@@ -538,21 +535,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
               ),
 
               const SizedBox(height: 20),
-
-              AppTextField(
-                controller: _emailController,
-                labelText: 'Email',
-                hintText: 'adresse@email.com',
-                prefixIcon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-                focusNode: _emailFocusNode,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_phoneFocusNode);
-                },
-              ),
-
-              const SizedBox(height: 16),
 
               AppTextField(
                 controller: _phoneController,

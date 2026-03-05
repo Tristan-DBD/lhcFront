@@ -62,7 +62,7 @@ class User {
       weight: json['weight'] as int? ?? 0,
       role: json['role'] as String? ?? '',
       stat: statList,
-      imageUri: json['imageUri'] as String? ?? 'default.png',
+      imageUri: json['imageUri'] as String? ?? 'profileImage/default.png',
       progUri: progUriList,
       payments: paymentList,
     );

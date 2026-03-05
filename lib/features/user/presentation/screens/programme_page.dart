@@ -12,9 +12,15 @@ import '../../../../core/utils/message_service.dart';
 import '../../data/services/program_service.dart';
 
 class ProgrammePage extends StatefulWidget {
-  const ProgrammePage({required this.user, super.key, this.onProgramsUpdated});
+  const ProgrammePage({
+    required this.user,
+    super.key,
+    this.onProgramsUpdated,
+    this.isManager = false,
+  });
 
   final User user;
+  final bool isManager;
   final Function(List<Map<String, dynamic>>)? onProgramsUpdated;
 
   @override
@@ -115,8 +121,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
                                     program['fileUri'] ?? program['name'],
                                   ),
                                 ),
-                                if (widget.user.role == 'COACH' ||
-                                    widget.user.role == 'ADMIN')
+                                if (widget.isManager)
                                   IconButton(
                                     icon: Icon(
                                       Icons.delete,
@@ -141,7 +146,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
             const SizedBox(height: 20),
 
             // Section upload nouveau programme
-            if (widget.user.role == 'COACH' || widget.user.role == 'ADMIN')
+            if (widget.isManager)
               AppCard(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -319,31 +324,51 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
         if (response.success == true) {
           if (response.data != null) {
-            final List<Map<String, dynamic>> serverPrograms = response.data!
-                .map((item) => item as Map<String, dynamic>)
-                .toList();
+            final List<Map<String, dynamic>> serverPrograms = [];
+
+            for (var item in response.data!) {
+              if (item is Map) {
+                // Le backend enveloppe les données dans un champ 'message'
+                final messageData = item['message'];
+
+                if (messageData is List) {
+                  // Cas où 'message' contient la liste des programmes
+                  for (var prog in messageData) {
+                    if (prog is Map) {
+                      final map = Map<String, dynamic>.from(prog);
+                      if (map['name'] != null || map['fileUri'] != null) {
+                        serverPrograms.add(map);
+                      }
+                    }
+                  }
+                } else if (item['name'] != null || item['fileUri'] != null) {
+                  // Cas où l'item lui-même est un programme (sécurité)
+                  serverPrograms.add(Map<String, dynamic>.from(item));
+                }
+              }
+            }
 
             setState(() {
               _programs = serverPrograms;
             });
 
-            // Notifier le parent des changements
             widget.onProgramsUpdated?.call(_programs);
             return;
-          } else {
-            // Structure de réponse inattendue
           }
-        } else {
-          // Erreur de réponse
+        } else {}
+      }
+    } catch (e) {}
+
+    // En cas d'erreur ou si pas de données serveur, utiliser les données locales filtrées
+
+    setState(() {
+      final List<Map<String, dynamic>> localPrograms = [];
+      for (var p in widget.user.progUri) {
+        if (p['name'] != null || p['fileUri'] != null) {
+          localPrograms.add(p);
         }
       }
-    } catch (e) {
-      // Erreur lors du chargement des programmes
-    }
-
-    // En cas d'erreur, utiliser les données locales de l'utilisateur
-    setState(() {
-      _programs = List.from(widget.user.progUri);
+      _programs = localPrograms;
     });
   }
 

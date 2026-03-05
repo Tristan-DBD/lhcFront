@@ -32,11 +32,11 @@ class CourseListTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.current.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.current.shadow.withValues(alpha: 0.08),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -78,7 +78,7 @@ class CourseListTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.current.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               if (course.description != null && course.description!.isNotEmpty)
@@ -88,7 +88,7 @@ class CourseListTile extends StatelessWidget {
                     course.description!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.current.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -159,7 +159,9 @@ class CourseListTile extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.current.background,
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -168,16 +170,23 @@ class CourseListTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!canManage) _buildActionButtons(isRegistered, isFull),
+          if (!canManage) _buildActionButtons(context, isRegistered, isFull),
           const SizedBox(height: 16),
-          _buildParticipantSection(canManage),
-          if (canManage) ...[const SizedBox(height: 16), _buildAdminActions()],
+          _buildParticipantSection(context, canManage),
+          if (canManage) ...[
+            const SizedBox(height: 16),
+            _buildAdminActions(context),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildActionButtons(bool isRegistered, bool isFull) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    bool isRegistered,
+    bool isFull,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -201,15 +210,15 @@ class CourseListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildParticipantSection(bool canManage) {
+  Widget _buildParticipantSection(BuildContext context, bool canManage) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.current.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.current.shadow.withValues(alpha: 0.05),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -231,7 +240,7 @@ class CourseListTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.current.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -248,7 +257,7 @@ class CourseListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildAdminActions() {
+  Widget _buildAdminActions(BuildContext context) {
     return Row(
       children: [
         Expanded(

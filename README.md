@@ -1,6 +1,6 @@
 # LHC Coaching - Flutter Front-end
 
-Application mobile de coaching sportif pour la gestion des cours collectifs, des programmes d'entraînement et du suivi des athlètes.
+Application mobile de coaching sportif pour la gestion des cours collectifs, des programmes d'entraînement, du suivi des paiements et du suivi des athlètes.
 
 ## 🚀 Mise en route
 
@@ -30,6 +30,13 @@ L'application nécessite les variables suivantes :
 ## 🏗️ Architecture
 Le projet suit une architecture **Feature-first** (orientée fonctionnalités) pour une meilleure modularité.
 
+### Fonctionnalités Clés
+- **Authentification** : Connexion, déconnexion et changement de mot de passe obligatoire.
+- **Cours** : Inscription et suivi des cours collectifs.
+- **Paiements** : Suivi des paiements annuels (vue athlète et admin).
+- **Programmes** : Consultation des programmes sportifs personnalisés.
+- **Profil** : Gestion des informations personnelles et statistiques (Squat, Bench, Deadlift).
+
 ### Structure des dossiers
 - `lib/features/` : Modules métiers (user, course, profile).
 - `lib/services/` : Couche d'accès aux données (API, Auth, Storage).
@@ -43,6 +50,9 @@ Le projet suit une architecture **Feature-first** (orientée fonctionnalités) p
 
 ## 🎨 Design System
 L'application supporte le **mode sombre** nativement. Les couleurs et styles sont centralisés dans `lib/constant/app_theme.dart`.
+
+## 📱 Configuration Réseau (Développement)
+Pour tester l'application sur un appareil physique sur le même réseau local, assurez-vous que `API_URL` dans votre `.env` pointe vers l'adresse IP locale de votre machine (ex: `http://192.168.1.XX:4000/api`).
 
 ## 🛠️ Optimisations Recommendations
 - **API Cache** : Éviter les appels redondants en mettant en cache les données utilisateur.

@@ -1,21 +1,30 @@
+# caches et fichiers temporaires
+build/
 .dart_tool/
+.packages
+.pub/
+.pub-cache/
+.env
+
+# fichiers de config locaux / IDE
+*.iml
+.idea/
+*.lock
+.metadata
 .flutter-plugins
 .flutter-plugins-dependencies
-.metadata
-.packages
-.pub-cache/
-.pub/
-build/
+
+# dossiers natifs non utilisés pour le web
 ios/
 android/
 linux/
 macos/
 windows/
-test/
+
+# Git
 .git/
 .gitignore
-.idea/
-*.iml
+
+# fichiers qui ne sont pas du code
 README.md
 analysis_options.yaml
-pubspec.lock

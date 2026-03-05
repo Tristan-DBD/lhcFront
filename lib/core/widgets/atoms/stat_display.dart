@@ -1,53 +1,34 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 
 class StatDisplay extends StatelessWidget {
   final String label;
   final String value;
-  final bool showDivider;
 
-  const StatDisplay({
-    required this.label,
-    required this.value,
-    this.showDivider = false,
-    super.key,
-  });
+  const StatDisplay({required this.label, required this.value, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.current.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.current.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
+          textAlign: TextAlign.center,
         ),
-        if (showDivider)
-          Container(
-            width: 1,
-            height: 60,
-            color: AppColors.current.textSecondary.withValues(alpha: 0.3),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.primary,
           ),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

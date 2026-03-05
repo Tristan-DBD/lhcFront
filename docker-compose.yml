@@ -1,8 +1,13 @@
 services:
   flutter-web:
-    build: .
+    build:
+      context: .
     image: lhc_front
     container_name: lhc_front_app
     ports:
-      - "3000:3000"
+      - "3000:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    env_file:
+      - .env

@@ -4,6 +4,7 @@ import 'package:lhc_front/features/user/presentation/screens/list_user.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/feature_card.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/auth/auth_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,6 +29,13 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.logout,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          onPressed: () => AuthService.logout(context),
+        ),
       ),
       body: SafeArea(
         child: Padding(

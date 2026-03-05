@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
+import 'package:lhc_front/core/utils/config_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -11,7 +13,7 @@ class SupabaseStorageService {
   SupabaseStorageService._internal();
 
   final SupabaseClient _supabase = Supabase.instance.client;
-  final String _bucketName = dotenv.env['SUPABASE_BUCKET']!;
+  final String _bucketName = Config.supabaseBucket;
 
   /// Récupère l'URL signée d'une image de profil
   Future<String> getProfileImageUrl(String imagePath) async {
@@ -19,12 +21,33 @@ class SupabaseStorageService {
       return '';
     }
 
+    // Normaliser le chemin (enlever le slash initial si présent)
+    final normalizedPath = imagePath.startsWith('/')
+        ? imagePath.substring(1)
+        : imagePath;
+
     try {
-      return await _supabase.storage
+      // Tenter d'abord l'URL signée (si le bucket est privé)
+      final url = await _supabase.storage
           .from(_bucketName)
-          .createSignedUrl(imagePath, 3600); // 1 heure
+          .createSignedUrl(normalizedPath, 3600);
+      // Success log removed
+      return url;
     } catch (e) {
-      return '';
+      // Error log removed
+      try {
+        // Fallback sur l'URL publique (si le bucket est public)
+        final publicUrl = _supabase.storage
+            .from(_bucketName)
+            .getPublicUrl(normalizedPath);
+        debugPrint(
+          'Supabase Fallback: Public URL generated for $normalizedPath',
+        );
+        return publicUrl;
+      } catch (e2) {
+        // Error log removed
+        return '';
+      }
     }
   }
 
@@ -53,12 +76,13 @@ class SupabaseStorageService {
   /// Met à jour la photo de profil via l'API
   Future<http.Response> updateProfileImage(
     int userId,
-    File imageFile,
+    Uint8List fileBytes,
+    String fileName,
     String token,
   ) async {
     final request = http.MultipartRequest(
       'PUT',
-      Uri.parse('${dotenv.env['API_URL']}/user/$userId/profile-image'),
+      Uri.parse('${Config.apiUrl}/user/$userId/profile-image'),
     );
 
     request.headers.addAll({
@@ -66,8 +90,7 @@ class SupabaseStorageService {
       'Authorization': 'Bearer $token',
     });
 
-    final fileBytes = await imageFile.readAsBytes();
-    final fileName = imageFile.path.split('/').last;
+    // Plus besoin de lire les bytes du fichier, ils sont passés en paramètre
 
     // Déterminer le MIME type selon l'extension
     String contentType;

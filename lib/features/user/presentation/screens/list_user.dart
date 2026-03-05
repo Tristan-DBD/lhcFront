@@ -113,14 +113,19 @@ class _ListUserPageState extends State<ListUserPage> {
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount:
-                              ResponsiveHelper.getGridCrossAxisCount(context),
+                              ResponsiveHelper.getGridCrossAxisCount(
+                                context,
+                                mobile: 2,
+                              ),
                           crossAxisSpacing: ResponsiveHelper.getGridSpacing(
                             context,
+                            mobile: 12,
                           ),
                           mainAxisSpacing: ResponsiveHelper.getGridSpacing(
                             context,
+                            mobile: 10,
                           ),
-                          childAspectRatio: 0.75,
+                          childAspectRatio: 0.8,
                         ),
                         itemCount: _controller.users.length,
                         itemBuilder: (context, index) {
@@ -166,48 +171,55 @@ class _ListUserPageState extends State<ListUserPage> {
   }) {
     return AppCard(
       onTap: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-        child: Column(
-          children: [
-            Expanded(
-              flex: 4,
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Expanded(
+            flex: 6,
+            child: Center(
               child: Container(
-                width: double.infinity,
+                padding: const EdgeInsets.all(2.0),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: ImageHelper.profileImage(imageUri),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Expanded(
-              flex: 3,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.3),
+                    width: 1.5,
                   ),
-                  const SizedBox(height: 4),
-                  RoleBadge(role: role),
-                ],
+                ),
+                child: ClipOval(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: ImageHelper.profileImage(imageUri, size: 40),
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            flex: 4,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Transform.scale(scale: 0.85, child: RoleBadge(role: role)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

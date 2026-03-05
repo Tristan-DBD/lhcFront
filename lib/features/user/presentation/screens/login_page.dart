@@ -24,6 +24,8 @@ class _LoginPageState extends State<LoginPage> {
   // Focus nodes pour la navigation entre champs
   final _loginFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+
+  final _confirmPasswordFocusNode = FocusNode();
   bool _isLoading = false;
 
   @override
@@ -37,6 +39,8 @@ class _LoginPageState extends State<LoginPage> {
 
   // Méthode pour gérer la connexion
   Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
@@ -48,18 +52,136 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (login['success'] == true) {
-        await StorageService.saveToken(login['data'][0]['message']);
-        NavigationHelper.initNavigation(context);
+        final token = login['data'][0]['message'];
+        await StorageService.saveToken(token);
+
+        // Si le mot de passe est le mot de passe par défaut, forcer le changement
+        if (_passwordController.text == '123456') {
+          setState(() => _isLoading = false);
+          if (mounted) {
+            _showPasswordChangeDialog();
+          }
+        } else {
+          if (mounted) {
+            NavigationHelper.initNavigation(context);
+          }
+        } 
       } else {
-        MessageService.showError(context, login['data'][0]['message']);
+        if (mounted) {
+          MessageService.showError(context, login['data'][0]['message']);
+        }
       }
     } catch (e) {
-      MessageService.showError(context, 'Erreur de connexion: $e');
+      if (mounted) {
+        MessageService.showError(context, 'Erreur de connexion: $e');
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  void _showPasswordChangeDialog() {
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final dialogFormKey = GlobalKey<FormState>();
+    bool isChanging = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Changer votre mot de passe'),
+          content: Form(
+            key: dialogFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'C\'est votre première connexion. Veuillez sécuriser votre compte avec un nouveau mot de passe (min. 6 caractères).',
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  controller: newPasswordController,
+                  labelText: 'Nouveau mot de passe',
+                  prefixIcon: Icons.lock_outline,
+                  obscureText: true,
+                  onSubmitted: (value) {
+                    FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
+                  },
+                  validator: (value) {
+                    if (value == null || value.length < 6) {
+                      return 'Minimum 6 caractères';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: confirmPasswordController,
+                  labelText: 'Confirmer le mot de passe',
+                  prefixIcon: Icons.lock_reset,
+                  obscureText: true,
+                  focusNode: _confirmPasswordFocusNode,
+                  validator: (value) {
+                    if (value != newPasswordController.text) {
+                      return 'Les mots de passe ne correspondent pas';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            AppButton(
+              text: 'Mettre à jour',
+              isLoading: isChanging,
+              onPressed: () async {
+                if (dialogFormKey.currentState!.validate()) {
+                  setDialogState(() => isChanging = true);
+                  try {
+                    final response = await AuthService.changePassword(
+                      newPasswordController.text,
+                    );
+                    if (response['success'] == true) {
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        MessageService.showSuccess(
+                          context,
+                          'Mot de passe mis à jour !',
+                        );
+                        NavigationHelper.initNavigation(context);
+                      }
+                    } else {
+                      if (context.mounted) {
+                        MessageService.showError(
+                          context,
+                          response['data'][0]['message'],
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      MessageService.showError(
+                        context,
+                        'Erreur lors du changement: $e',
+                      );
+                    }
+                  } finally {
+                    setDialogState(() => isChanging = false);
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -69,7 +191,6 @@ class _LoginPageState extends State<LoginPage> {
     final logoSize = ResponsiveHelper.isMobile(context) ? 100.0 : 120.0;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
@@ -166,23 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                           Validators.required(value, 'mot de passe'),
                     ),
 
-                    const SizedBox(height: 12),
-
-                    // Mot de passe oublié
-                    Row(
-                      children: [
-                        const Spacer(),
-                        const Spacer(),
-                        AppTextButton(
-                          text: 'Mot de passe oublié?',
-                          onPressed: () {
-                            // Action mot de passe oublié
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 50),
 
                     // Bouton Se connecter
                     AppButton(

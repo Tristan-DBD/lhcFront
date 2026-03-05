@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:lhc_front/core/utils/config_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/utils/navigation_helper.dart';
@@ -9,24 +9,17 @@ import 'core/utils/navigation_helper.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await dotenv.load();
-    
-    final supabaseUrl = dotenv.env['SUPABASE_URL'];
-    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+    Config.load();
 
-    if (supabaseUrl == null || supabaseAnonKey == null) {
-      throw Exception("SUPABASE_URL ou SUPABASE_ANON_KEY manquante dans le fichier .env");
-    }
+    final supabaseUrl = Config.supabaseUrl;
+    final supabaseAnonKey = Config.supabaseAnonKey;
 
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   } catch (e) {
     debugPrint("Erreur d'initialisation : $e");
     // L'application continuera mais les fonctionnalités liées à Supabase échoueront proprement
   }
-  
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

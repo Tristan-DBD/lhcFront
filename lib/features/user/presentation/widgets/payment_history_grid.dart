@@ -27,6 +27,16 @@ class _PaymentHistoryGridState extends State<PaymentHistoryGrid> {
     _payments = Map<String, bool>.from(widget.initialPayments);
   }
 
+  @override
+  void didUpdateWidget(covariant PaymentHistoryGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialPayments != oldWidget.initialPayments) {
+      setState(() {
+        _payments = Map<String, bool>.from(widget.initialPayments);
+      });
+    }
+  }
+
   static const List<String> months = [
     'jan',
     'feb',
