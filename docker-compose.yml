@@ -1,0 +1,8 @@
+services:
+  flutter-web:
+    build: .
+    image: lhc_front
+    container_name: lhc_front_app
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
