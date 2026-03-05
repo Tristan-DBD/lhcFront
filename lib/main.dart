@@ -9,7 +9,7 @@ import 'core/utils/navigation_helper.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    Config.load();
+    await Config.load();
 
     final supabaseUrl = Config.supabaseUrl;
     final supabaseAnonKey = Config.supabaseAnonKey;
@@ -19,7 +19,7 @@ Future<void> main() async {
     debugPrint("Erreur d'initialisation : $e");
     // L'application continuera mais les fonctionnalités liées à Supabase échoueront proprement
   }
-
+  
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

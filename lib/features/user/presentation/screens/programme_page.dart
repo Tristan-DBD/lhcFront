@@ -188,14 +188,16 @@ class _ProgrammePageState extends State<ProgrammePage> {
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx', 'xls'],
+        withData: true,
       );
 
-      if (result == null || result.files.single.path == null) {
+      if (result == null || result.files.single.bytes == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final File file = File(result.files.single.path!);
+      final fileBytes = result.files.single.bytes!;
+      final fileName = result.files.single.name;
 
       final String? token = await _getToken();
 
@@ -213,7 +215,8 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
       final response = await _programService.uploadProgram(
         widget.user.id,
-        file,
+        fileBytes,
+        fileName,
       );
 
       if (response.success) {

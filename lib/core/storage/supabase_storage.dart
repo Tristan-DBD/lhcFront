@@ -27,27 +27,13 @@ class SupabaseStorageService {
         : imagePath;
 
     try {
-      // Tenter d'abord l'URL signée (si le bucket est privé)
-      final url = await _supabase.storage
+      // Utiliser l'URL publique puisque le bucket est configuré ainsi
+      final publicUrl = _supabase.storage
           .from(_bucketName)
-          .createSignedUrl(normalizedPath, 3600);
-      // Success log removed
-      return url;
+          .getPublicUrl(normalizedPath);
+      return publicUrl;
     } catch (e) {
-      // Error log removed
-      try {
-        // Fallback sur l'URL publique (si le bucket est public)
-        final publicUrl = _supabase.storage
-            .from(_bucketName)
-            .getPublicUrl(normalizedPath);
-        debugPrint(
-          'Supabase Fallback: Public URL generated for $normalizedPath',
-        );
-        return publicUrl;
-      } catch (e2) {
-        // Error log removed
-        return '';
-      }
+      return '';
     }
   }
 

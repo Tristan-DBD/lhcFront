@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../../../../core/api/api_response.dart';
@@ -13,7 +14,8 @@ class ProgramService {
   /// Upload un fichier Excel pour un programme utilisateur
   Future<ApiResponse<Map<String, dynamic>>> uploadProgram(
     int userId,
-    File excelFile,
+    Uint8List fileBytes,
+    String fileName,
   ) async {
     try {
       final token = await StorageService.getToken();
@@ -28,9 +30,6 @@ class ProgramService {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       });
-
-      final fileBytes = await excelFile.readAsBytes();
-      final fileName = excelFile.path.split('/').last;
 
       String contentType;
       if (fileName.toLowerCase().endsWith('.xlsx')) {
