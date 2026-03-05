@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_card.dart';
 
 class PaymentHistoryGrid extends StatefulWidget {
@@ -89,7 +88,7 @@ class _PaymentHistoryGridState extends State<PaymentHistoryGrid> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.current.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -98,7 +97,7 @@ class _PaymentHistoryGridState extends State<PaymentHistoryGrid> {
                   'Cliquer pour modifier',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.current.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
             ],
@@ -145,10 +144,12 @@ class _PaymentHistoryGridState extends State<PaymentHistoryGrid> {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
         border: isCurrentMonth
-            ? Border.all(color: AppColors.current.primary, width: 2)
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
             : (widget.isEditable
                   ? Border.all(
-                      color: AppColors.current.primary.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.5),
                     )
                   : null),
       ),
@@ -205,7 +206,7 @@ class _PaymentHistoryGridState extends State<PaymentHistoryGrid> {
         Text(
           label,
           style: TextStyle(
-            color: AppColors.current.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 12,
           ),
         ),

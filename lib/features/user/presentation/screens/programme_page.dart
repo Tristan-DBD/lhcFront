@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../data/models/user.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/responsive_helper.dart';

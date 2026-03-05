@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/core/theme/app_theme.dart';
 import 'package:lhc_front/features/user/presentation/controllers/user_controller.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -89,7 +89,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                   Expanded(child: Text(message)),
                 ],
               ),
-              backgroundColor: AppColors.current.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
               duration: const Duration(seconds: 5),
               behavior: SnackBarBehavior.floating,
             ),
@@ -103,7 +103,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Utilisateur créé avec succès'),
-              backgroundColor: AppColors.current.success,
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
           );
           Navigator.pop(context);
@@ -117,7 +117,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
-            backgroundColor: AppColors.current.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -248,7 +248,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: AppColors.current.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -256,9 +256,11 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.current.inputBorder),
+            border: Border.all(
+              color: AppColors.border,
+            ),
             borderRadius: BorderRadius.circular(8.0),
-            color: AppColors.current.inputBackground,
+            color: AppColors.inputBackground,
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -279,7 +281,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
                         child: Text(
                           _getRoleDisplayName(role),
                           style: TextStyle(
-                            color: AppColors.current.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
                           ),
                         ),

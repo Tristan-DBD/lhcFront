@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../data/models/course.dart';
 import '../controllers/course_controller.dart';
 import 'participant_card.dart';
@@ -44,10 +43,10 @@ class CourseListTile extends StatelessWidget {
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        backgroundColor: AppColors.current.transparent,
-        collapsedBackgroundColor: AppColors.current.transparent,
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
         title: _buildTitle(context),
-        trailing: _buildTrailing(isFull),
+        trailing: _buildTrailing(isFull, context),
         children: [_buildDetails(context, canManage, isUserRegistered, isFull)],
       ),
     );
@@ -59,12 +58,12 @@ class CourseListTile extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.current.primary.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             Icons.fitness_center,
-            color: AppColors.current.primary,
+            color: Theme.of(context).colorScheme.primary,
             size: 24,
           ),
         ),
@@ -95,7 +94,7 @@ class CourseListTile extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 8),
-              _buildTimeBadge(),
+              _buildTimeBadge(context),
             ],
           ),
         ),
@@ -103,23 +102,27 @@ class CourseListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeBadge() {
+  Widget _buildTimeBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.current.primary.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.schedule, size: 14, color: AppColors.current.primary),
+          Icon(
+            Icons.schedule,
+            size: 14,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(width: 6),
           Text(
             controller.formatDateTime(course.startAt),
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.current.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -128,13 +131,14 @@ class CourseListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildTrailing(bool isFull) {
+  Widget _buildTrailing(bool isFull, BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: _getParticipantColor(
           course.registrationCount,
           course.maxParticipants,
+          context,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -143,7 +147,7 @@ class CourseListTile extends StatelessWidget {
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: AppColors.current.white,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
@@ -193,9 +197,9 @@ class CourseListTile extends StatelessWidget {
         onPressed: isRegistered ? onUnregister : (isFull ? null : onRegister),
         style: ElevatedButton.styleFrom(
           backgroundColor: isRegistered
-              ? AppColors.current.error
-              : AppColors.current.success,
-          foregroundColor: AppColors.current.white,
+              ? Theme.of(context).colorScheme.error
+              : Colors.green,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -231,7 +235,7 @@ class CourseListTile extends StatelessWidget {
             children: [
               Icon(
                 Icons.people_rounded,
-                color: AppColors.current.primary,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -266,8 +270,8 @@ class CourseListTile extends StatelessWidget {
             icon: const Icon(Icons.edit, size: 18),
             label: const Text('Modifier'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.current.orange,
-              side: BorderSide(color: AppColors.current.orange),
+              foregroundColor: Colors.orange,
+              side: const BorderSide(color: Colors.orange),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -282,8 +286,8 @@ class CourseListTile extends StatelessWidget {
             icon: const Icon(Icons.delete, size: 18),
             label: const Text('Supprimer'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.current.error,
-              side: BorderSide(color: AppColors.current.error),
+              foregroundColor: Theme.of(context).colorScheme.error,
+              side: BorderSide(color: Theme.of(context).colorScheme.error),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -295,11 +299,11 @@ class CourseListTile extends StatelessWidget {
     );
   }
 
-  Color _getParticipantColor(int current, int max) {
+  Color _getParticipantColor(int current, int max, BuildContext context) {
     final double ratio = max > 0 ? current / max : 0;
-    if (ratio >= 1.0) return AppColors.current.error;
-    if (ratio >= 0.8) return AppColors.current.orange;
-    if (ratio >= 0.5) return AppColors.current.primary;
-    return AppColors.grey;
+    if (ratio >= 1.0) return Theme.of(context).colorScheme.error;
+    if (ratio >= 0.8) return Colors.orange;
+    if (ratio >= 0.5) return Theme.of(context).colorScheme.primary;
+    return Colors.grey;
   }
 }

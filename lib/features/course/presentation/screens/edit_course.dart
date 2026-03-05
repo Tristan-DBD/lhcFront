@@ -8,7 +8,6 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/date_time_picker.dart';
 import '../../../../core/widgets/generic_dropdown.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class EditCourseScreen extends StatefulWidget {
   final Course course;
@@ -118,7 +117,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Cours mis à jour avec succès'),
-            backgroundColor: AppColors.current.success,
+            backgroundColor: Colors.green,
           ),
         );
         widget.onCourseUpdated?.call();
@@ -129,7 +128,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
             content: Text(
               'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
             ),
-            backgroundColor: AppColors.current.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -137,7 +136,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la mise à jour du cours: $e'),
-          backgroundColor: AppColors.current.error,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     } finally {
@@ -243,13 +242,13 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
               prefixIcon: Icons.person,
               leadingWidget: (coach) => CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.current.primary.withValues(
-                  alpha: 0.1,
-                ),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 child: Text(
                   coach.name.isNotEmpty ? coach.name[0].toUpperCase() : '?',
                   style: TextStyle(
-                    color: AppColors.current.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),

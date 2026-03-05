@@ -3,7 +3,6 @@ import '../controllers/course_controller.dart';
 import '../widgets/course_list_tile.dart';
 import 'add_course.dart';
 import 'edit_course.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class ListCoursePage extends StatefulWidget {
   const ListCoursePage({super.key});
@@ -27,8 +26,8 @@ class _ListCoursePageState extends State<ListCoursePage> {
       SnackBar(
         content: Text(message),
         backgroundColor: success
-            ? AppColors.current.success
-            : AppColors.current.error,
+            ? Colors.green
+            : Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -116,7 +115,7 @@ class _ListCoursePageState extends State<ListCoursePage> {
           Icon(
             Icons.fitness_center_outlined,
             size: 64,
-            color: AppColors.current.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
@@ -124,7 +123,7 @@ class _ListCoursePageState extends State<ListCoursePage> {
                 'Il n\'y a pas de cours de prévu pour l\'instant',
             style: TextStyle(
               fontSize: 18,
-              color: AppColors.current.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -132,7 +131,9 @@ class _ListCoursePageState extends State<ListCoursePage> {
             'Revenez plus tard ou contactez votre coach',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.current.textSecondary.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],

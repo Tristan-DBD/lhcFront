@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/core/api/api_response.dart';
 import '../../data/models/user.dart';
 import '../../data/services/stat_service.dart';
 import '../../data/services/user_service.dart';
-import '../../../../core/api/api_response.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
@@ -11,7 +11,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/role_badge.dart';
@@ -138,14 +137,14 @@ class _EditUserScreenState extends State<EditUserScreen> {
           content: const Text(
             'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
           ),
-          backgroundColor: AppColors.current.blue,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: AppColors.current.error,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -235,7 +234,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
               content: Text(
                 response.errorMessage ?? 'Erreur lors de la mise à jour',
               ),
-              backgroundColor: AppColors.current.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
           setState(() {
@@ -469,11 +468,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: AppColors.current.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                             borderRadius: BorderRadius.circular(50),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.current.shadow.withValues(
+                                color: Theme.of(context).colorScheme.shadow.withValues(
                                   alpha: 0.1,
                                 ),
                                 blurRadius: 15,
@@ -502,16 +501,16 @@ class _EditUserScreenState extends State<EditUserScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: AppColors.current.primary,
+                                color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
-                                  color: AppColors.current.white,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
                                 Icons.camera_alt,
-                                color: AppColors.current.white,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 size: 16,
                               ),
                             ),
@@ -525,7 +524,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.current.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
