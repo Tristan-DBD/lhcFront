@@ -37,8 +37,8 @@ FROM nginx:alpine
 # Copy Flutter build output to Nginx html folder
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Optional: custom Nginx config
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Use custom Nginx config that listens on port 3000
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 3000 
 CMD ["nginx", "-g", "daemon off;"]  
