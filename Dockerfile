@@ -40,4 +40,6 @@ COPY --from=build /app/build/web /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]  
+
+# At runtime, Railway injects $PORT. Use envsubst to inject it into nginx config.
+CMD sh -c "export NGINX_PORT=${PORT:-8080} && envsubst '\$NGINX_PORT' < /etc/nginx/conf.d/default.conf > /tmp/default.conf && mv /tmp/default.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
