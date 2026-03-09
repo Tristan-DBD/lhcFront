@@ -39,5 +39,5 @@ COPY --from=build /app/build/web /usr/share/nginx/html
 # Use custom Nginx config that listens on port 3000
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]  
