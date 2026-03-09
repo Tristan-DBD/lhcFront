@@ -33,13 +33,16 @@ RUN flutter build web --release \
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
+# Install gettext for envsubst (needed to inject $PORT at runtime)
+RUN apk add --no-cache gettext
+
 # Copy Flutter build output to Nginx html folder
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Use custom Nginx config that listens on port 3000
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Use custom Nginx config template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 8080
 
 # At runtime, Railway injects $PORT. Use envsubst to inject it into nginx config.
-CMD sh -c "export NGINX_PORT=${PORT:-8080} && envsubst '\$NGINX_PORT' < /etc/nginx/conf.d/default.conf > /tmp/default.conf && mv /tmp/default.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+CMD sh -c "export NGINX_PORT=${PORT:-8080} && envsubst '\$NGINX_PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
