@@ -128,7 +128,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           // ensure result is passed back if system back button is used

@@ -24,7 +24,15 @@ class AuthService {
   }
 
   static Future<void> logout(BuildContext context) async {
-    await StorageService.clearToken();
+    final refreshToken = await StorageService.getRefreshToken();
+    if (refreshToken != null) {
+      try {
+        await HttpClient().post('/auth/logout', body: {'refreshToken': refreshToken});
+      } catch (e) {
+        // Ignorer l'erreur si le serveur est injoignable
+      }
+    }
+    await StorageService.clearTokens();
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginPage()),

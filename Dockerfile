@@ -23,7 +23,6 @@ ARG APP_VERSION
 # Build Web avec variables d'environnement via Dart define
 RUN flutter build web --release \
     --base-href / \
-    --pwa-strategy=none \
     --dart-define=API_URL=${API_URL} \
     --dart-define=SUPABASE_URL=${SUPABASE_URL} \
     --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
@@ -40,5 +39,5 @@ COPY --from=build /app/build/web /usr/share/nginx/html
 # Use custom Nginx config that listens on port 3000
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3000 
+EXPOSE 80 
 CMD ["nginx", "-g", "daemon off;"]  

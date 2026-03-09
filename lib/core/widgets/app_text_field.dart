@@ -6,7 +6,7 @@ class AppTextField extends StatelessWidget {
   final String? labelText;
   final String? hintText;
   final IconData? prefixIcon;
-  final IconData? suffixIcon;
+  final Widget? suffixIcon;
   final bool obscureText;
   final bool enabled;
   final TextInputType? keyboardType;
@@ -69,12 +69,7 @@ class AppTextField extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               )
             : null,
-        suffixIcon: suffixIcon != null
-            ? Icon(
-                suffixIcon,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              )
-            : null,
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
           borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),

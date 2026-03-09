@@ -4,32 +4,8 @@ import '../storage/local_storage.dart';
 class JwtService {
   static Future<bool> isTokenValid() async {
     try {
-      final token = await StorageService.getToken();
-      if (token == null || token.isEmpty) return false;
-
-      // Validation JWT locale
-      final parts = token.split('.');
-      if (parts.length != 3) return false; // JWT doit avoir 3 parties
-
-      // Décoder le payload (partie 2)
-      String payload = parts[1];
-
-      // Ajouter le padding si nécessaire pour le base64
-      switch (payload.length % 4) {
-        case 0:
-          break;
-        case 2:
-          payload += '==';
-          break;
-        case 3:
-          payload += '=';
-          break;
-        default:
-          return false;
-      }
-
-      final decodedPayload = utf8.decode(base64.decode(payload));
-      final payloadMap = json.decode(decodedPayload) as Map<String, dynamic>;
+      final payloadMap = await getTokenPayload();
+      if (payloadMap == null) return false;
 
       // Vérifier l'expiration (exp)
       if (payloadMap.containsKey('exp')) {
@@ -55,6 +31,9 @@ class JwtService {
       if (parts.length != 3) return null;
 
       String payload = parts[1];
+
+      // Conversion base64url en base64 standard
+      payload = payload.replaceAll('-', '+').replaceAll('_', '/');
 
       // Ajouter le padding si nécessaire pour le base64
       switch (payload.length % 4) {

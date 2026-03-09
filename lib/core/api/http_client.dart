@@ -18,7 +18,10 @@ class HttpClient {
         Uri.parse('${_apiService.apiUrl}$endpoint'),
         headers: _apiService.headers(token: await StorageService.getToken()),
       );
-      return _handleResponse(response);
+      return _handleResponse(response, retry: () async => http.get(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+      ));
     } catch (e) {
       throw _handleError(e);
     }
@@ -35,7 +38,11 @@ class HttpClient {
         headers: _apiService.headers(token: await StorageService.getToken()),
         body: body != null ? jsonEncode(body) : null,
       );
-      return _handleResponse(response);
+      return _handleResponse(response, retry: () async => http.post(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      ));
     } catch (e) {
       throw _handleError(e);
     }
@@ -69,7 +76,11 @@ class HttpClient {
         headers: _apiService.headers(token: await StorageService.getToken()),
         body: body != null ? jsonEncode(body) : null,
       );
-      return _handleResponse(response);
+      return _handleResponse(response, retry: () async => http.put(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      ));
     } catch (e) {
       throw _handleError(e);
     }
@@ -82,7 +93,10 @@ class HttpClient {
         Uri.parse('${_apiService.apiUrl}$endpoint'),
         headers: _apiService.headers(token: await StorageService.getToken()),
       );
-      return _handleResponse(response);
+      return _handleResponse(response, retry: () async => http.delete(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+      ));
     } catch (e) {
       throw _handleError(e);
     }
@@ -99,28 +113,55 @@ class HttpClient {
         headers: _apiService.headers(token: await StorageService.getToken()),
         body: body != null ? jsonEncode(body) : null,
       );
-      return _handleResponse(response);
+      return _handleResponse(response, retry: () async => http.delete(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      ));
     } catch (e) {
       throw _handleError(e);
     }
   }
 
+  bool _isRefreshing = false;
+
   /// Gère la réponse HTTP
-  Map<String, dynamic> _handleResponse(http.Response response) {
+  Future<Map<String, dynamic>> _handleResponse(http.Response response, {Future<http.Response> Function()? retry}) async {
     try {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return responseBody;
+      } else if (response.statusCode == 401 && retry != null) {
+        // Tentative de refresh token
+        if (!_isRefreshing) {
+          _isRefreshing = true;
+          try {
+            final refreshed = await refreshToken();
+            _isRefreshing = false;
+            if (refreshed) {
+              final newResponse = await retry();
+              return _handleResponse(newResponse);
+            }
+          } catch (e) {
+            _isRefreshing = false;
+          }
+        } else {
+          // Attendre que le refresh en cours se termine
+          await Future.delayed(const Duration(milliseconds: 500));
+          final newResponse = await retry();
+          return _handleResponse(newResponse);
+        }
+        
+        // Si on arrive ici, le refresh a échoué
+        throw HttpException('Session expirée', 401);
       } else {
         // Pour les réponses d'erreur valides (400, 422, etc.)
-        // on retourne le corps de la réponse pour que le client puisse gérer les erreurs métier
         if (responseBody is Map<String, dynamic> &&
             responseBody.containsKey('success') &&
             responseBody.containsKey('data')) {
           return responseBody;
         }
-        // Pour les autres erreurs, on lance une exception
         throw HttpException(
           responseBody['data']?['message'] ??
               responseBody['message'] ??
@@ -134,6 +175,31 @@ class HttpClient {
         'Erreur de parsing de la réponse: $e',
         response.statusCode,
       );
+    }
+  }
+
+  /// Rafraîchit les tokens
+  Future<bool> refreshToken() async {
+    try {
+      final refreshToken = await StorageService.getRefreshToken();
+      if (refreshToken == null) return false;
+
+      final response = await http.post(
+        Uri.parse('${_apiService.apiUrl}/auth/refresh'),
+        headers: _apiService.headers(),
+        body: jsonEncode({'refreshToken': refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final tokens = data['data'][0]['message'];
+        await StorageService.saveToken(tokens['accessToken']);
+        await StorageService.saveRefreshToken(tokens['refreshToken']);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 

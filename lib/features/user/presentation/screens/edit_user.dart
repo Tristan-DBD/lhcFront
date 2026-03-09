@@ -7,7 +7,6 @@ import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,7 +48,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
   final _deadliftFocusNode = FocusNode();
 
   bool _isLoading = false;
-  File? _newProfileImage;
   Uint8List? _newProfileImageBytes;
   String? _newProfileImageName;
 
@@ -57,8 +55,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
   void initState() {
     super.initState();
     // Initialiser les contrôleurs avec les données de l'utilisateur
-    _nameController = TextEditingController(text: widget.user.surname);
-    _surnameController = TextEditingController(text: widget.user.name);
+    _nameController = TextEditingController(text: widget.user.name);
+    _surnameController = TextEditingController(text: widget.user.surname);
     _ageController = TextEditingController(text: widget.user.age.toString());
     _phoneController = TextEditingController(text: widget.user.phone);
     _weightController = TextEditingController(
@@ -124,12 +122,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
       setState(() {
         _newProfileImageBytes = pickedFile.bytes;
         _newProfileImageName = pickedFile.name;
-
-        // Pour la compatibilité avec le code existant qui pourrait utiliser File
-        // Note: Sur Web, result.files.single.path est null, ce qui causait l'erreur
-        if (pickedFile.path != null) {
-          _newProfileImage = File(pickedFile.path!);
-        }
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,11 +155,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
       final Map<String, dynamic> updatedStatsData = {};
 
       // Vérifier chaque champ et n'ajouter que s'il a changé
-      if (_surnameController.text.trim() != widget.user.name) {
-        updatedData['name'] = _surnameController.text.trim();
+      if (_nameController.text.trim() != widget.user.name) {
+        updatedData['name'] = _nameController.text.trim();
       }
-      if (_nameController.text.trim() != widget.user.surname) {
-        updatedData['surname'] = _nameController.text.trim();
+      if (_surnameController.text.trim() != widget.user.surname) {
+        updatedData['surname'] = _surnameController.text.trim();
       }
       if (_phoneController.text.trim() != widget.user.phone) {
         updatedData['phone'] = _phoneController.text.trim();

@@ -76,6 +76,22 @@ class _ListUserPageState extends State<ListUserPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Filtres par rôles
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        _buildFilterChip(_controller, 'COACH', 'Coach'),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(_controller, 'ATHLETE_PROG', 'Prog'),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(_controller, 'ATHLETE_FULL', 'Full'),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(_controller, 'ATHLETE_CO', 'Co'),
+                      ],
+                    ),
+                  ),
                   if (_controller.isLoading)
                     const Expanded(
                       child: Center(child: CircularProgressIndicator()),
@@ -113,17 +129,12 @@ class _ListUserPageState extends State<ListUserPage> {
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount:
-                              ResponsiveHelper.getGridCrossAxisCount(
-                                context,
-                                mobile: 2,
-                              ),
+                              ResponsiveHelper.getGridCrossAxisCount(context),
                           crossAxisSpacing: ResponsiveHelper.getGridSpacing(
                             context,
-                            mobile: 12,
                           ),
                           mainAxisSpacing: ResponsiveHelper.getGridSpacing(
                             context,
-                            mobile: 10,
                           ),
                           childAspectRatio: 0.8,
                         ),
@@ -163,6 +174,29 @@ class _ListUserPageState extends State<ListUserPage> {
     );
   }
 
+  Widget _buildFilterChip(UserController controller, String role, String label) {
+    final isSelected = controller.selectedRoles.contains(role);
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: isSelected
+              ? Theme.of(context).colorScheme.onPrimaryContainer
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (bool selected) {
+        controller.toggleRoleFilter(role);
+      },
+      selectedColor: Theme.of(context).colorScheme.primaryContainer,
+      checkmarkColor: Theme.of(context).colorScheme.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
   Widget _buildUserCard({
     required String name,
     required String role,
@@ -184,14 +218,14 @@ class _ListUserPageState extends State<ListUserPage> {
                   border: Border.all(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.3),
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                     width: 1.5,
                   ),
                 ),
                 child: ClipOval(
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: ImageHelper.profileImage(imageUri, size: 40),
+                    child: ImageHelper.profileImage(imageUri),
                   ),
                 ),
               ),

@@ -4,7 +4,7 @@ class Config {
   static Future<void> load() async {
     // Tente de charger le fichier .env en fallback pour les builds locaux
     try {
-      await dotenv.load(fileName: ".env");
+      await dotenv.load();
     } catch (e) {
       // Ignorer si le fichier n'est pas présent (ex: en prod Railway via Docker)
     }

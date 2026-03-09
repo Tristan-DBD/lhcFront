@@ -5,7 +5,7 @@ class User {
   final String email;
   final String phone;
   final int age;
-  final int weight;
+  final double weight;
   final String role;
   final List<Map<String, dynamic>> stat;
   final String imageUri;
@@ -59,7 +59,7 @@ class User {
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       age: json['age'] as int? ?? 0,
-      weight: json['weight'] as int? ?? 0,
+      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
       role: json['role'] as String? ?? '',
       stat: statList,
       imageUri: json['imageUri'] as String? ?? 'profileImage/default.png',
@@ -97,7 +97,7 @@ class User {
     String? email,
     String? phone,
     int? age,
-    int? weight,
+    double? weight,
     String? role,
     List<Map<String, dynamic>>? stat,
     String? imageUri,

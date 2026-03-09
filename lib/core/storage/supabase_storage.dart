@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:lhc_front/core/utils/config_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -39,6 +38,13 @@ class SupabaseStorageService {
 
   /// Télécharge un fichier programme depuis Supabase Storage
   Future<File?> downloadProgramFile(String fileUri, String savePath) async {
+    if (kIsWeb) {
+      // Sur le web, cette méthode ne doit pas être utilisée
+      throw UnsupportedError(
+        'downloadProgramFile is not supported on web. Use downloadProgramBytes instead.',
+      );
+    }
+
     try {
       // Utiliser directement le fileUri qui contient déjà le chemin complet
       // Ex: /prog/1770733721037.xlsx
@@ -54,6 +60,24 @@ class SupabaseStorageService {
       await file.writeAsBytes(response);
 
       return file;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Télécharge les bytes d'un fichier programme depuis Supabase Storage (compatible web)
+  Future<Uint8List?> downloadProgramBytes(String fileUri) async {
+    try {
+      // Utiliser directement le fileUri qui contient déjà le chemin complet
+      // Ex: /prog/1770733721037.xlsx
+      final filePath = fileUri.startsWith('/') ? fileUri.substring(1) : fileUri;
+
+      // Télécharger les données du fichier
+      final response = await _supabase.storage
+          .from(_bucketName)
+          .download(filePath);
+
+      return response;
     } catch (e) {
       return null;
     }

@@ -55,10 +55,15 @@ class UserService {
     }
   }
 
-  static Future<ApiResponse<List<User>>> getAll() async {
+  static Future<ApiResponse<List<User>>> getAll({List<String>? roles}) async {
     try {
       final httpClient = HttpClient();
-      final response = await httpClient.get('/user');
+      String url = '/user';
+      if (roles != null && roles.isNotEmpty) {
+        final queryParams = roles.map((r) => 'role=$r').join('&');
+        url = '$url?$queryParams';
+      }
+      final response = await httpClient.get(url);
 
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> dataList = response['data'];

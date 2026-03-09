@@ -1,13 +1,25 @@
 services:
   flutter-web:
-    build:
-      context: .
-    image: lhc_front
-    container_name: lhc_front_app
     ports:
       - "3000:80"
+    build:
+      context: .
+      args:
+        - API_URL=${API_URL}
+        - SUPABASE_URL=${SUPABASE_URL}
+        - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+        - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+        - APP_NAME=${APP_NAME}
+        - APP_VERSION=${APP_VERSION}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - API_URL=${API_URL}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+      - APP_NAME=${APP_NAME}
+      - APP_VERSION=${APP_VERSION}

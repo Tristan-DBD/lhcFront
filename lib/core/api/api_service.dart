@@ -3,7 +3,7 @@ import '../utils/config_helper.dart';
 class ApiService {
   final String apiUrl = Config.apiUrl;
 
-  ApiService() {}
+  ApiService();
 
   // Headers communs pour les requêtes
   Map<String, String> headers({String? token}) {

@@ -27,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final _confirmPasswordFocusNode = FocusNode();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -52,8 +53,9 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (login['success'] == true) {
-        final token = login['data'][0]['message'];
-        await StorageService.saveToken(token);
+        final tokens = login['data'][0]['message'];
+        await StorageService.saveToken(tokens['accessToken']);
+        await StorageService.saveRefreshToken(tokens['refreshToken']);
 
         // Si le mot de passe est le mot de passe par défaut, forcer le changement
         if (_passwordController.text == '123456') {
@@ -93,9 +95,13 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Changer votre mot de passe'),
+      builder: (context) {
+        bool obscureNew = true;
+        bool obscureConfirm = true;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+            title: const Text('Changer votre mot de passe'),
           content: Form(
             key: dialogFormKey,
             child: Column(
@@ -109,7 +115,18 @@ class _LoginPageState extends State<LoginPage> {
                   controller: newPasswordController,
                   labelText: 'Nouveau mot de passe',
                   prefixIcon: Icons.lock_outline,
-                  obscureText: true,
+                  obscureText: obscureNew,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        obscureNew = !obscureNew;
+                      });
+                    },
+                  ),
                   onSubmitted: (value) {
                     FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                   },
@@ -125,7 +142,18 @@ class _LoginPageState extends State<LoginPage> {
                   controller: confirmPasswordController,
                   labelText: 'Confirmer le mot de passe',
                   prefixIcon: Icons.lock_reset,
-                  obscureText: true,
+                  obscureText: obscureConfirm,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        obscureConfirm = !obscureConfirm;
+                      });
+                    },
+                  ),
                   focusNode: _confirmPasswordFocusNode,
                   validator: (value) {
                     if (value != newPasswordController.text) {
@@ -179,10 +207,12 @@ class _LoginPageState extends State<LoginPage> {
               },
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
+);
+}
 
   @override
   Widget build(BuildContext context) {
@@ -269,23 +299,34 @@ class _LoginPageState extends State<LoginPage> {
 
                     // Champ Mot de passe
                     AppTextField(
-                      controller: _passwordController,
-                      labelText: 'Mot de passe',
-                      hintText: 'Entrez votre mot de passe',
-                      prefixIcon: Icons.lock,
-                      obscureText: true,
-                      focusNode: _passwordFocusNode,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) {
-                        // Soumettre le formulaire quand on appuie sur Entrée
-                        if (_formKey.currentState!.validate()) {
-                          // Appeler la fonction de connexion
-                          _handleLogin();
-                        }
-                      },
-                      validator: (value) =>
-                          Validators.required(value, 'mot de passe'),
+                  controller: _passwordController,
+                  labelText: 'Mot de passe',
+                  hintText: 'Votre mot de passe',
+                  prefixIcon: Icons.lock_outline,
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  focusNode: _passwordFocusNode,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (_formKey.currentState!.validate()) {
+                      _handleLogin();
+                    }
+                  },
+                  validator: (value) =>
+                      Validators.required(value, 'mot de passe'),
+                ),
 
                     const SizedBox(height: 50),
 

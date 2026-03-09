@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/models/user.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,6 +10,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/message_service.dart';
 import '../../data/services/program_service.dart';
+import '../../../../core/utils/file_saver/file_saver.dart';
 
 class ProgrammePage extends StatefulWidget {
   const ProgrammePage({
@@ -359,7 +361,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
           }
         } else {}
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore errors during server data fetching
+    }
 
     // En cas d'erreur ou si pas de données serveur, utiliser les données locales filtrées
 
@@ -459,24 +463,37 @@ class _ProgrammePageState extends State<ProgrammePage> {
       // Extraire le nom de fichier du fileUri
       final fileName = fileUri.split('/').last;
 
-      // Télécharger le fichier depuis Supabase d'abord dans un temporaire
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = '${tempDir.path}/$fileName';
+      // Télécharger le fichier depuis Supabase
+      Uint8List? fileBytes;
 
-      final file = await _storageService.downloadProgramFile(fileUri, tempPath);
+      if (kIsWeb) {
+        // Sur le web, télécharger directement les bytes
+        fileBytes = await _storageService.downloadProgramBytes(fileUri);
+      } else {
+        // Sur mobile/desktop, utiliser le fichier temporaire existant
+        final tempDir = await getTemporaryDirectory();
+        final tempPath = '${tempDir.path}/$fileName';
+        final file = await _storageService.downloadProgramFile(
+          fileUri,
+          tempPath,
+        );
+
+        if (file != null) {
+          fileBytes = await file.readAsBytes();
+          // Supprimer le fichier temporaire
+          await file.delete();
+        }
+      }
 
       setState(() {
         _isLoading = false;
       });
 
-      if (file != null) {
+      if (fileBytes != null) {
         // Laisser l'utilisateur choisir où sauvegarder le fichier
-        final String? outputPath = await FilePicker.platform.saveFile(
-          dialogTitle: 'Sauvegarder le programme',
+        final String? outputPath = await FileSaver.saveFile(
           fileName: fileName,
-          type: FileType.custom,
-          allowedExtensions: ['xlsx', 'xls'],
-          bytes: await file.readAsBytes(),
+          bytes: fileBytes,
         );
 
         if (outputPath != null) {
@@ -487,9 +504,6 @@ class _ProgrammePageState extends State<ProgrammePage> {
         } else {
           MessageService.showInfo(context, 'Sauvegarde annulée');
         }
-
-        // Supprimer le fichier temporaire
-        await file.delete();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

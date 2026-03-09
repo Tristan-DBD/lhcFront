@@ -10,6 +10,7 @@ class UserController extends ChangeNotifier {
   String? errorMessage;
   bool isLoading = true;
   bool canEditPayments = false;
+  List<String> selectedRoles = [];
 
   UserController() {
     init();
@@ -18,6 +19,15 @@ class UserController extends ChangeNotifier {
   Future<void> init() async {
     await checkUserPermissions();
     await loadUsers();
+  }
+
+  void toggleRoleFilter(String role) {
+    if (selectedRoles.contains(role)) {
+      selectedRoles.remove(role);
+    } else {
+      selectedRoles.add(role);
+    }
+    loadUsers();
   }
 
   Future<void> checkUserPermissions() async {
@@ -33,7 +43,7 @@ class UserController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await UserService.getAll();
+      final response = await UserService.getAll(roles: selectedRoles);
 
       if (!response.success) {
         isLoading = false;

@@ -115,8 +115,8 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
 
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Cours mis à jour avec succès'),
+          const SnackBar(
+            content: Text('Cours mis à jour avec succès'),
             backgroundColor: Colors.green,
           ),
         );
