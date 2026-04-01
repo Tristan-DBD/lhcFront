@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../storage/local_storage.dart';
+import '../api/http_client.dart';
 
 class JwtService {
   static Future<bool> isTokenValid() async {
@@ -12,7 +13,12 @@ class JwtService {
         final exp = payloadMap['exp'] as int;
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         if (now >= exp) {
-          return false; // Token expiré
+          // Token expiré, tentative de rafraîchissement
+          final refreshed = await HttpClient().refreshToken();
+          if (refreshed) {
+            return true; // Le refresh a fonctionné, l'utilisateur est toujours connecté
+          }
+          return false; // Le token est expiré et le refresh a échoué
         }
       }
 

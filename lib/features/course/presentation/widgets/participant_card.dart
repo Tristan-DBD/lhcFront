@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../user/data/models/user.dart';
-import '../../../../core/widgets/role_badge.dart';
 
 class ParticipantCard extends StatelessWidget {
   final User user;
