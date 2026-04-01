@@ -4,6 +4,7 @@ import '../../data/models/course.dart';
 import '../../data/services/course_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/date_time_picker.dart';
@@ -114,31 +115,31 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
       final response = await CourseService.update(widget.course.id, courseData);
 
       if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cours mis à jour avec succès'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          AppSnackBar.show(
+            context,
+            message: 'Cours mis à jour avec succès',
+          );
+        }
         widget.onCourseUpdated?.call();
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        if (mounted) {
+          AppSnackBar.show(
+            context,
+            message: 'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
+            isError: true,
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la mise à jour du cours: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Erreur lors de la mise à jour du cours: $e',
+          isError: true,
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;

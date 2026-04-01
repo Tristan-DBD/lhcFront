@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/core/utils/app_snackbar.dart';
 import '../../../../core/auth/auth_service.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
 import '../../../../core/auth/jwt_service.dart';
@@ -96,8 +97,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (!response.success) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.errorMessage ?? 'Erreur inconnue')),
+        AppSnackBar.show(
+          context,
+          message: response.errorMessage ?? 'Erreur inconnue',
         );
         // Revert local state if needed (the widget already toggled it visually)
         setState(() {
@@ -401,15 +403,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String _getStatValue(String exerciseName) {
-    // Vérifier si l'utilisateur a des stats
     if (_currentUser.stat.isEmpty) {
       return '0 kg';
     }
-
-    // Les stats sont dans le premier élément du tableau avec des propriétés directes
     final stats = _currentUser.stat.first;
-
-    // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
     final messageStats = stats['message'] as Map<String, dynamic>?;
     final finalStats = messageStats ?? stats;
 

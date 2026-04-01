@@ -3,6 +3,7 @@ import '../../data/services/course_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../user/data/models/user.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/date_time_picker.dart';
@@ -72,25 +73,25 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
 
     // Vérifier si une date a été sélectionnée
     if (_courseDateTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Veuillez sélectionner une date et heure pour le cours',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Veuillez sélectionner une date et heure pour le cours',
+          isError: true,
+        );
+      }
       return;
     }
 
     // Vérifier si un coach a été sélectionné
     if (_selectedCoachId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Veuillez sélectionner un coach'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Veuillez sélectionner un coach',
+          isError: true,
+        );
+      }
       return;
     }
 
@@ -109,23 +110,24 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
       };
       final response = await CourseService.create(courseData);
       if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Cours créé avec succès'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
+        if (mounted) {
+          AppSnackBar.show(
+            context,
+            message: 'Cours créé avec succès',
+          );
+        }
         // Notifier la page parente que le cours a été créé
         widget.onCourseCreated?.call();
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la création du cours: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Erreur lors de la création du cours: $e',
+          isError: true,
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;

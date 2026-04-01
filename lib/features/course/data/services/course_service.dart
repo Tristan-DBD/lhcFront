@@ -32,30 +32,49 @@ class CourseService {
     }
   }
 
-  static Future<ApiResponse<List<Course>>> getAll() async {
+  static Future<ApiResponse<List<Course>>> getAll({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       final httpClient = HttpClient();
-      final response = await httpClient.get('/course');
+      String queryParams = '';
 
-      if (response['success'] == true &&
-          response['data'] != null &&
-          (response['data'] as List).isNotEmpty) {
-        final data = response['data'][0];
-        final List<dynamic> dataList = data['message'] is List
-            ? data['message']
-            : [];
+      if (startDate != null && endDate != null) {
+        // Envoi en UTC avec 'Z' pour la compatibilité backend (Zod)
+        queryParams =
+            '?startDate=${startDate.toUtc().toIso8601String()}&endDate=${endDate.toUtc().toIso8601String()}';
+      }
+
+      final response = await httpClient.get('/course$queryParams');
+
+      if (response['success'] == true && response['data'] != null) {
+        final List<dynamic> dataList;
+
+        if (response.containsKey('pagination')) {
+          // Format paginé : la liste est directement dans 'data'
+          dataList = response['data'] as List<dynamic>;
+        } else {
+          // Format standard avec enveloppe 'message'
+          if ((response['data'] as List).isEmpty) {
+            dataList = [];
+          } else {
+            final firstItem = response['data'][0];
+            final message = firstItem['message'];
+            if (message is List) {
+              dataList = message;
+            } else if (message is Map && message['data'] is List) {
+              dataList = message['data'];
+            } else {
+              dataList = [firstItem];
+            }
+          }
+        }
+
         final courses = dataList.map((json) => Course.fromJson(json)).toList();
         return ApiResponse.success(courses);
       }
-      String? errorMessage;
-      if (response['data'] != null && (response['data'] as List).isNotEmpty) {
-        errorMessage = response['data'][0]['message']?.toString();
-      }
-      return ApiResponse.error(
-        errorMessage ??
-            response['message'] ??
-            'Erreur lors de la récupération des cours',
-      );
+      return ApiResponse.error(response['message'] ?? 'Erreur inconnue');
     } catch (e) {
       return ApiResponse.error(e.toString());
     }

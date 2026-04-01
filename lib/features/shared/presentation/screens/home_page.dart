@@ -86,40 +86,54 @@ class _HomePageState extends State<HomePage> {
 
               // Grid des fonctionnalités
               Expanded(
-                child: GridView.count(
-                  crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
-                    context,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(0, 30 * (1 - value)),
+                      child: Opacity(
+                        opacity: value,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: GridView.count(
+                    crossAxisCount: ResponsiveHelper.getGridCrossAxisCount(
+                      context,
+                    ),
+                    crossAxisSpacing: ResponsiveHelper.getGridSpacing(context),
+                    mainAxisSpacing: ResponsiveHelper.getGridSpacing(context),
+                    children: [
+                      FeatureCard(
+                        icon: Icons.people,
+                        title: 'Liste des utilisateurs',
+                        description: 'Gérer les membres',
+                        color: Theme.of(context).colorScheme.primary,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const ListUserPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      FeatureCard(
+                        icon: Icons.groups,
+                        title: 'Cours collectifs',
+                        description: 'Planning des sessions',
+                        color: Theme.of(context).colorScheme.secondary,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const ListCoursePage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  crossAxisSpacing: ResponsiveHelper.getGridSpacing(context),
-                  mainAxisSpacing: ResponsiveHelper.getGridSpacing(context),
-                  children: [
-                    FeatureCard(
-                      icon: Icons.people,
-                      title: 'Liste des utilisateurs',
-                      description: 'Gérer les membres',
-                      color: Theme.of(context).colorScheme.primary,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) => const ListUserPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    FeatureCard(
-                      icon: Icons.groups,
-                      title: 'Cours collectifs',
-                      description: 'Planning des sessions',
-                      color: Theme.of(context).colorScheme.secondary,
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) => const ListCoursePage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ),
             ],

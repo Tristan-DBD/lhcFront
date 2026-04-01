@@ -6,6 +6,7 @@ import '../../data/services/user_service.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -124,21 +125,20 @@ class _EditUserScreenState extends State<EditUserScreen> {
         _newProfileImageName = pickedFile.name;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          message: 'Erreur lors de la sélection de l\'image: $e',
+          isError: true,
+        );
+      }
     }
   }
 
@@ -221,14 +221,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
         final response = await UserService.update(widget.user.id, updatedData);
 
         if (!response.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                response.errorMessage ?? 'Erreur lors de la mise à jour',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          if (mounted) {
+            AppSnackBar.show(
+              context,
+              message: response.errorMessage ?? 'Erreur lors de la mise à jour',
+              isError: true,
+            );
+          }
           setState(() {
             _isLoading = false;
           });

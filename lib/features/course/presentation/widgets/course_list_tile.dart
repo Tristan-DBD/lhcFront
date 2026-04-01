@@ -59,6 +59,9 @@ class CourseListTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -163,9 +166,7 @@ class CourseListTile extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -251,7 +252,13 @@ class CourseListTile extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (course.registrations.isEmpty)
-            const Text('Aucun participant pour le moment.')
+            Text(
+              'Aucun participant pour le moment.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            )
           else
             ...course.registrations
                 .map((reg) => ParticipantCard(user: reg.user!))

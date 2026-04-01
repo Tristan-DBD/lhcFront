@@ -5,6 +5,7 @@ import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class CreateUserScreen extends StatefulWidget {
   const CreateUserScreen({super.key});
@@ -80,19 +81,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
 
         if (mounted) {
           final message = result.errorMessage ?? 'Erreur lors de la création';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(message)),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              duration: const Duration(seconds: 5),
-              behavior: SnackBarBehavior.floating,
-            ),
+          AppSnackBar.show(
+            context,
+            message: message,
+            isError: true,
           );
         }
       } else {
@@ -100,11 +92,9 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           _isLoading = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Utilisateur créé avec succès'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-            ),
+          AppSnackBar.show(
+            context,
+            message: 'Utilisateur créé avec succès',
           );
           Navigator.pop(context);
         }
@@ -114,11 +104,10 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        AppSnackBar.show(
+          context,
+          message: 'Erreur lors de la création : $e',
+          isError: true,
         );
       }
     }

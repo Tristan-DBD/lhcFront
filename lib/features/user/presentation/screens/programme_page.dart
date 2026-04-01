@@ -505,13 +505,9 @@ class _ProgrammePageState extends State<ProgrammePage> {
           MessageService.showInfo(context, 'Sauvegarde annulée');
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Erreur lors du téléchargement: fichier non trouvé',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        MessageService.showError(
+          context,
+          'Erreur lors du téléchargement: fichier non trouvé',
         );
       }
     } catch (e) {
@@ -519,12 +515,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      MessageService.showError(context, 'Erreur: $e');
     }
   }
 

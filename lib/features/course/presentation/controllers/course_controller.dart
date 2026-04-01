@@ -25,22 +25,52 @@ class CourseController extends ChangeNotifier {
     notifyListeners();
   }
 
+  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DateTime.now();
+
+  DateTime get focusedDay => _focusedDay;
+  DateTime get selectedDay => _selectedDay;
+
+  set focusedDay(DateTime value) {
+    if (_focusedDay != value) {
+      _focusedDay = value;
+      notifyListeners();
+    }
+  }
+
+  set selectedDay(DateTime value) {
+    if (_selectedDay != value) {
+      _selectedDay = value;
+      notifyListeners();
+    }
+  }
+
+  List<Course> getCoursesForDay(DateTime day) {
+    return courses.where((course) {
+      final courseDate = course.startAt.toLocal();
+      return courseDate.year == day.year &&
+          courseDate.month == day.month &&
+          courseDate.day == day.day;
+    }).toList();
+  }
+
   Future<void> loadCourses() async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await CourseService.getAll();
-      if (!response.success) {
-        isLoading = false;
-        errorMessage = response.errorMessage ?? 'Erreur lors du chargement';
-        notifyListeners();
-        return;
-      }
+      // Charger une plage de 3 mois autour du jour focalisé
+      final startDate = DateTime(_focusedDay.year, _focusedDay.month - 1, 1);
+      final endDate = DateTime(_focusedDay.year, _focusedDay.month + 2, 0);
 
-      if (response.data != null) {
-        courses = response.data!;
+      final response = await CourseService.getAll(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      if (response.success) {
+        courses = response.data ?? [];
         // Trier les cours par date de début (du plus proche au plus lointain)
         courses.sort((a, b) => a.startAt.compareTo(b.startAt));
       } else {
@@ -105,11 +135,9 @@ class CourseController extends ChangeNotifier {
     try {
       final localDateTime = dateTime.toLocal();
 
-      final date =
-          '${localDateTime.day.toString().padLeft(2, '0')}/${localDateTime.month.toString().padLeft(2, '0')}/${localDateTime.year}';
       final time =
           '${localDateTime.hour.toString().padLeft(2, '0')}:${localDateTime.minute.toString().padLeft(2, '0')}';
-      return '$date à $time';
+      return time;
     } catch (e) {
       return dateTime.toString();
     }

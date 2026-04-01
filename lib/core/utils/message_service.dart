@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_snackbar.dart';
 
 /// Service centralisé pour afficher des messages à l'utilisateur
 class MessageService {
@@ -7,89 +8,32 @@ class MessageService {
   MessageService._internal();
 
   /// Affiche un message d'erreur
-  static void showError(
-    BuildContext context,
-    String message, {
-    Duration duration = const Duration(seconds: 3),
-    SnackBarBehavior behavior = SnackBarBehavior.floating,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        duration: duration,
-        behavior: behavior,
-      ),
-    );
+  static void showError(BuildContext context, String message) {
+    AppSnackBar.show(context, message: message, isError: true);
   }
 
   /// Affiche un message de succès
-  static void showSuccess(
-    BuildContext context,
-    String message, {
-    Duration duration = const Duration(seconds: 3),
-    SnackBarBehavior behavior = SnackBarBehavior.floating,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: duration,
-        behavior: behavior,
-      ),
-    );
+  static void showSuccess(BuildContext context, String message) {
+    AppSnackBar.show(context, message: message, isError: false);
   }
 
   /// Affiche un message d'information
-  static void showInfo(
-    BuildContext context,
-    String message, {
-    Duration duration = const Duration(seconds: 3),
-    SnackBarBehavior behavior = SnackBarBehavior.floating,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: duration,
-        behavior: behavior,
-      ),
-    );
+  static void showInfo(BuildContext context, String message) {
+    AppSnackBar.show(context, message: message, isError: false);
   }
 
   /// Affiche un message d'avertissement
-  static void showWarning(
-    BuildContext context,
-    String message, {
-    Duration duration = const Duration(seconds: 3),
-    SnackBarBehavior behavior = SnackBarBehavior.floating,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        duration: duration,
-        behavior: behavior,
-      ),
-    );
+  static void showWarning(BuildContext context, String message) {
+    AppSnackBar.show(context, message: message, isError: true);
   }
 
   /// Affiche un message personnalisé
   static void showCustom(
     BuildContext context, {
-    required Widget content,
-    Color? backgroundColor,
-    Duration duration = const Duration(seconds: 3),
-    SnackBarBehavior behavior = SnackBarBehavior.floating,
+    required String message,
+    bool isError = false,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: content,
-        backgroundColor: backgroundColor,
-        duration: duration,
-        behavior: behavior,
-      ),
-    );
+    AppSnackBar.show(context, message: message, isError: isError);
   }
 
   /// Cache tous les snackbars actuellement affichés

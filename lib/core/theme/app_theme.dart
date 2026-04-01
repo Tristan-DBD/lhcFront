@@ -41,63 +41,63 @@ class AppColors {
   static Color get athleteCo => current.athleteCo;
 
   static AppColorsData get light => const AppColorsData(
-    primary: Color(0xFF1A1A1A),
-    secondary: Color(0xFF4A90D9),
-    background: Color(0xFFFAFAFA),
+    primary: Color(0xFF101828),
+    secondary: Color(0xFF3538CD),
+    background: Color(0xFFF9FAFB),
     surface: Color(0xFFFFFFFF),
-    surfaceVariant: Color(0xFFF5F5F5),
-    textPrimary: Color(0xFF1A1A1A),
-    textSecondary: Color(0xFF757575),
-    error: Color(0xFFE53935),
-    success: Color(0xFF43A047),
-    warning: Color(0xFFFB8C00),
-    info: Color(0xFF1E88E5),
-    border: Color(0xFFE0E0E0),
-    inputBorder: Color(0xFFE0E0E0),
-    inputBackground: Color(0xFFF5F5F5),
-    inputFocused: Color(0xFF1A1A1A),
-    shadow: Color(0x1A000000),
-    divider: Color(0xFFEEEEEE),
+    surfaceVariant: Color(0xFFF2F4F7),
+    textPrimary: Color(0xFF101828),
+    textSecondary: Color(0xFF475467),
+    error: Color(0xFFD92D20),
+    success: Color(0xFF079455),
+    warning: Color(0xFFDC6803),
+    info: Color(0xFF1570EF),
+    border: Color(0xFFD0D5DD),
+    inputBorder: Color(0xFFD0D5DD),
+    inputBackground: Color(0xFFFFFFFF),
+    inputFocused: Color(0xFF3538CD),
+    shadow: Color(0x0D101828),
+    divider: Color(0xFFEAECF0),
     white: Color(0xFFFFFFFF),
-    grey: Color(0xFF9E9E9E),
-    blue: Color(0xFF2196F3),
-    orange: Color(0xFFFF9800),
+    grey: Color(0xFF667085),
+    blue: Color(0xFF1570EF),
+    orange: Color(0xFFF79009),
     transparent: Color(0x00000000),
-    coach: Color(0xFF43A047),
-    admin: Color(0xFFFF5722),
-    athleteFull: Color(0xFFE53935),
-    athleteProg: Color(0xFF1E88E5),
-    athleteCo: Color(0xFF3949AB),
+    coach: Color(0xFF079455),
+    admin: Color(0xFF7F56D9),
+    athleteFull: Color(0xFFD92D20),
+    athleteProg: Color(0xFF1570EF),
+    athleteCo: Color(0xFF3538CD),
   );
 
   static AppColorsData get dark => const AppColorsData(
-    primary: Color(0xFFFFFFFF),
-    secondary: Color(0xFF64B5F6),
-    background: Color(0xFF121212),
-    surface: Color(0xFF1E1E1E),
-    surfaceVariant: Color(0xFF2A2A2A),
-    textPrimary: Color(0xFFFAFAFA),
-    textSecondary: Color(0xFFB0B0B0),
-    error: Color(0xFFEF5350),
-    success: Color(0xFF66BB6A),
-    warning: Color(0xFFFFA726),
-    info: Color(0xFF42A5F5),
-    border: Color(0xFF424242),
-    inputBorder: Color(0xFF424242),
-    inputBackground: Color(0xFF2A2A2A),
-    inputFocused: Color(0xFFFFFFFF),
+    primary: Color(0xFFF9FAFB),
+    secondary: Color(0xFF6172F3),
+    background: Color(0xFF0C111D),
+    surface: Color(0xFF1D2939),
+    surfaceVariant: Color(0xFF344054),
+    textPrimary: Color(0xFFF9FAFB),
+    textSecondary: Color(0xFF98A2B3),
+    error: Color(0xFFF04438),
+    success: Color(0xFF12B76A),
+    warning: Color(0xFFF79009),
+    info: Color(0xFF2E90FA),
+    border: Color(0xFF344054),
+    inputBorder: Color(0xFF344054),
+    inputBackground: Color(0xFF1D2939),
+    inputFocused: Color(0xFF6172F3),
     shadow: Color(0x33000000),
-    divider: Color(0xFF333333),
+    divider: Color(0xFF344054),
     white: Color(0xFFFFFFFF),
-    grey: Color(0xFF757575),
-    blue: Color(0xFF64B5F6),
-    orange: Color(0xFFFFA726),
+    grey: Color(0xFF98A2B3),
+    blue: Color(0xFF528BFF),
+    orange: Color(0xFFFEC84B),
     transparent: Color(0x00000000),
-    coach: Color(0xFF66BB6A),
-    admin: Color(0xFFFF7043),
-    athleteFull: Color(0xFFEF5350),
-    athleteProg: Color(0xFF42A5F5),
-    athleteCo: Color(0xFF5C6BC0),
+    coach: Color(0xFF12B76A),
+    admin: Color(0xFF9E77ED),
+    athleteFull: Color(0xFFF04438),
+    athleteProg: Color(0xFF2E90FA),
+    athleteCo: Color(0xFF6172F3),
   );
 }
 
@@ -129,6 +129,23 @@ class AppColorsData {
   final Color athleteFull;
   final Color athleteProg;
   final Color athleteCo;
+
+  // Métriques utilitaires pour les dégradés
+  Gradient getPrimaryGradient({double opacity1 = 0.1, double opacity2 = 0.3}) {
+    return LinearGradient(
+      colors: [primary.withOpacity(opacity1), primary.withOpacity(opacity2)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
+  Gradient getCustomGradient(Color color, {double opacity1 = 0.1, double opacity2 = 0.3}) {
+    return LinearGradient(
+      colors: [color.withOpacity(opacity1), color.withOpacity(opacity2)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
 
   const AppColorsData({
     required this.primary,

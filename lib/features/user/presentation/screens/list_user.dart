@@ -99,28 +99,45 @@ class _ListUserPageState extends State<ListUserPage> {
                   else if (_controller.users.isEmpty)
                     Expanded(
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 64,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _controller.errorMessage ??
-                                  'Aucun utilisateur trouvé',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(32),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.people_outline,
+                                  size: 64,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 32),
+                              Text(
+                                _controller.errorMessage ?? 'Aucun utilisateur',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Il semble qu\'aucun membre ne corresponde à vos critères de recherche ou de filtre.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
@@ -176,22 +193,35 @@ class _ListUserPageState extends State<ListUserPage> {
 
   Widget _buildFilterChip(UserController controller, String role, String label) {
     final isSelected = controller.selectedRoles.contains(role);
+    final theme = Theme.of(context);
+    
     return FilterChip(
       label: Text(
         label,
         style: TextStyle(
           fontSize: 12,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           color: isSelected
-              ? Theme.of(context).colorScheme.onPrimaryContainer
-              : Theme.of(context).colorScheme.onSurfaceVariant,
+              ? theme.colorScheme.secondary
+              : theme.colorScheme.onSurfaceVariant,
         ),
       ),
       selected: isSelected,
       onSelected: (bool selected) {
         controller.toggleRoleFilter(role);
       },
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      checkmarkColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: Colors.transparent,
+      selectedColor: theme.colorScheme.secondary.withOpacity(0.1),
+      checkmarkColor: theme.colorScheme.secondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: isSelected
+              ? theme.colorScheme.secondary
+              : theme.colorScheme.outline.withOpacity(0.2),
+          width: isSelected ? 1.5 : 1,
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );

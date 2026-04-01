@@ -39,7 +39,6 @@ class ParticipantCard extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        trailing: RoleBadge(role: user.role),
       ),
     );
   }
