@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
+import 'package:lhc_front/features/coaching_slot/presentation/screens/list_coaching_slot.dart';
 import 'package:lhc_front/features/user/presentation/screens/list_user.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/feature_card.dart';
@@ -94,10 +95,7 @@ class _HomePageState extends State<HomePage> {
                   builder: (context, value, child) {
                     return Transform.translate(
                       offset: Offset(0, 30 * (1 - value)),
-                      child: Opacity(
-                        opacity: value,
-                        child: child,
-                      ),
+                      child: Opacity(opacity: value, child: child),
                     );
                   },
                   child: GridView.count(
@@ -134,6 +132,20 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       FeatureCard(
+                        icon: Icons.schedule,
+                        title: 'Créneaux d\'appel',
+                        description: 'Réserver un appel coach',
+                        color: Colors.purple,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) =>
+                                  const ListCoachingSlotPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      FeatureCard(
                         icon: Icons.shopping_bag,
                         title: 'Boutique',
                         description: 'Gérer les stocks',
@@ -141,7 +153,8 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (context) => const ShopManagementScreen(),
+                              builder: (context) =>
+                                  const ShopManagementScreen(),
                             ),
                           );
                         },

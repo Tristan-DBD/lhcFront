@@ -9,6 +9,7 @@ class GenericDropdown<T> extends StatefulWidget {
   final String? labelText;
   final IconData? prefixIcon;
   final Widget Function(T item)? leadingWidget;
+  final String? Function(T? value)? validator;
 
   const GenericDropdown({
     required this.items, required this.displayString, required this.onSelected, super.key,
@@ -17,6 +18,7 @@ class GenericDropdown<T> extends StatefulWidget {
     this.labelText,
     this.prefixIcon,
     this.leadingWidget,
+    this.validator,
   });
 
   @override
@@ -94,6 +96,7 @@ class _GenericDropdownState<T> extends State<GenericDropdown<T>> {
           widget.onSelected(newValue);
         }
       },
+      validator: widget.validator,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/core/utils/app_snackbar.dart';
+import 'package:lhc_front/features/coaching_slot/presentation/screens/list_coaching_slot.dart';
 import '../../../../core/auth/auth_service.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
 import '../../../../core/auth/jwt_service.dart';
@@ -360,6 +361,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       _buildOptionRow(
                         label: 'Boutique',
                         page: const AthleteShopScreen(),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildOptionRow(
+                        label: 'Créneaux d\'appel',
+                        page: const ListCoachingSlotPage(),
                       ),
                     ],
                   ),
