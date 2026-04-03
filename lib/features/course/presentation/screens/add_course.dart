@@ -26,7 +26,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
   final _durationController = TextEditingController();
   final _maxParticipantsController = TextEditingController();
   DateTime? _courseDateTime;
-  int? _selectedCoachId;
+  String? _selectedCoachId;
   List<User> _coaches = [];
 
   // Focus nodes pour la navigation entre les champs

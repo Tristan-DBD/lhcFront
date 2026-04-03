@@ -7,8 +7,8 @@ class CoachingSlotController extends ChangeNotifier {
   List<CoachingSlot> slots = [];
   String? errorMessage;
   bool isLoading = true;
-  int? processingSlotId;
-  int? userId;
+  String? processingSlotId;
+  String? userId;
   String? userRole;
 
   CoachingSlotController() {
@@ -107,7 +107,7 @@ class CoachingSlotController extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateSlot(int id, Map<String, dynamic> slotData) async {
+  Future<bool> updateSlot(String id, Map<String, dynamic> slotData) async {
     try {
       final response = await CoachingSlotService.update(id, slotData);
 
@@ -126,7 +126,7 @@ class CoachingSlotController extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteSlot(int id) async {
+  Future<bool> deleteSlot(String id) async {
     try {
       final response = await CoachingSlotService.delete(id);
 
@@ -145,7 +145,7 @@ class CoachingSlotController extends ChangeNotifier {
     }
   }
 
-  Future<bool> bookSlot(int slotId) async {
+  Future<bool> bookSlot(String slotId) async {
     if (userId == null) {
       errorMessage = 'Utilisateur non connecté';
       notifyListeners();
@@ -177,7 +177,7 @@ class CoachingSlotController extends ChangeNotifier {
     }
   }
 
-  Future<bool> cancelBooking(int slotId) async {
+  Future<bool> cancelBooking(String slotId) async {
     if (userId == null) {
       errorMessage = 'Utilisateur non connecté';
       notifyListeners();

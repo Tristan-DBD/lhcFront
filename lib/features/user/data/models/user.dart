@@ -1,5 +1,5 @@
 class User {
-  final int id;
+  final String id;
   final String name;
   final String surname;
   final String email;
@@ -53,7 +53,7 @@ class User {
     }
 
     return User(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       surname: json['surname'] as String? ?? '',
       email: json['email'] as String? ?? '',
@@ -91,7 +91,7 @@ class User {
 
   // Méthode copyWith pour créer une copie avec certaines propriétés modifiées
   User copyWith({
-    int? id,
+    String? id,
     String? name,
     String? surname,
     String? email,

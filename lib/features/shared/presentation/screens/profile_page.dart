@@ -38,7 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
   late Map<String, bool> _payments;
   bool _isViewerManager = false;
 
-  int? _viewerId;
+  String? _viewerId;
 
   @override
   void initState() {

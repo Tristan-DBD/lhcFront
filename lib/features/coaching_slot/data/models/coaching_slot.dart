@@ -1,9 +1,9 @@
 import '../../../user/data/models/user.dart';
 
 class SlotBooking {
-  final int id;
-  final int slotId;
-  final int userId;
+  final String id;
+  final String slotId;
+  final String userId;
   final User? user;
   final DateTime bookedAt;
 
@@ -17,9 +17,9 @@ class SlotBooking {
 
   factory SlotBooking.fromJson(Map<String, dynamic> json) {
     return SlotBooking(
-      id: json['id'] as int? ?? 0,
-      slotId: json['slotId'] as int? ?? 0,
-      userId: json['userId'] as int? ?? 0,
+      id: json['id'] as String? ?? '0',
+      slotId: json['slotId'] as String? ?? '0',
+      userId: json['userId'] as String? ?? '0',
       bookedAt: json['bookedAt'] != null
           ? DateTime.parse(json['bookedAt'] as String)
           : DateTime.now(),
@@ -29,10 +29,10 @@ class SlotBooking {
 }
 
 class CoachingSlot {
-  final int id;
+  final String id;
   final DateTime startTime;
   final DateTime endTime;
-  final int coachId;
+  final String coachId;
   final List<SlotBooking> bookings;
 
   CoachingSlot({
@@ -43,7 +43,7 @@ class CoachingSlot {
     this.bookings = const [],
   });
 
-  bool isBookedByUser(int? userId) {
+  bool isBookedByUser(String? userId) {
     if (userId == null) return false;
     return bookings.any((booking) => booking.userId == userId);
   }
@@ -59,14 +59,14 @@ class CoachingSlot {
         : <SlotBooking>[];
 
     return CoachingSlot(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '0',
       startTime: json['startTime'] != null
           ? DateTime.parse(json['startTime'] as String)
           : DateTime.now(),
       endTime: json['endTime'] != null
           ? DateTime.parse(json['endTime'] as String)
           : DateTime.now(),
-      coachId: json['coachId'] as int? ?? 0,
+      coachId: json['coachId'] as String? ?? '0',
       bookings: bookings,
     );
   }

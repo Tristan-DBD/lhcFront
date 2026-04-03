@@ -219,8 +219,8 @@ class HttpClient {
   /// Gère la réponse HTTP
   Future<Map<String, dynamic>> _handleResponse(http.Response response, {Future<http.Response> Function()? retry}) async {
     try {
-      // Cas spécifique du No Content
-      if (response.statusCode == 204) {
+      // Cas spécifique du No Content ou Not Modified
+      if (response.statusCode == 204 || response.statusCode == 304) {
         return {'success': true, 'data': []};
       }
 

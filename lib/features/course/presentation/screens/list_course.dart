@@ -40,7 +40,7 @@ class _ListCoursePageState extends State<ListCoursePage>
     AppSnackBar.show(context, message: message, isError: !success);
   }
 
-  Future<void> _handleDelete(int courseId) async {
+  Future<void> _handleDelete(String courseId) async {
     final success = await _controller.deleteCourse(courseId);
     _showSnackBar(
       success ? 'Cours supprimé avec succès' : 'Erreur lors de la suppression',
@@ -48,7 +48,7 @@ class _ListCoursePageState extends State<ListCoursePage>
     );
   }
 
-  Future<void> _handleRegister(int courseId) async {
+  Future<void> _handleRegister(String courseId) async {
     final success = await _controller.registerToCourse(courseId);
     _showSnackBar(
       success
@@ -58,7 +58,7 @@ class _ListCoursePageState extends State<ListCoursePage>
     );
   }
 
-  Future<void> _handleUnregister(int courseId) async {
+  Future<void> _handleUnregister(String courseId) async {
     final success = await _controller.unregisterFromCourse(courseId);
     _showSnackBar(
       success

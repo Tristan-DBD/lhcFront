@@ -81,7 +81,7 @@ class CourseService {
   }
 
   static Future<ApiResponse<List<dynamic>>> getNbrRegistration(
-    int courseId,
+    String courseId,
   ) async {
     try {
       final httpClient = HttpClient();
@@ -105,7 +105,7 @@ class CourseService {
     }
   }
 
-  static Future<ApiResponse<bool>> delete(int courseId) async {
+  static Future<ApiResponse<bool>> delete(String courseId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.delete('/course/$courseId');
@@ -116,8 +116,8 @@ class CourseService {
   }
 
   static Future<ApiResponse<bool>> unregisterFromCourse(
-    int courseId,
-    int userId,
+    String courseId,
+    String userId,
   ) async {
     try {
       final httpClient = HttpClient();
@@ -131,7 +131,7 @@ class CourseService {
     }
   }
 
-  static Future<ApiResponse<Course>> getById(int courseId) async {
+  static Future<ApiResponse<Course>> getById(String courseId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.get('/course/$courseId');
@@ -156,7 +156,7 @@ class CourseService {
   }
 
   static Future<ApiResponse<Course>> update(
-    int courseId,
+    String courseId,
     Map<String, dynamic> courseData,
   ) async {
     try {
@@ -188,8 +188,8 @@ class CourseService {
   }
 
   static Future<ApiResponse<bool>> registerToCourse(
-    int courseId,
-    int userId,
+    String courseId,
+    String userId,
   ) async {
     try {
       final httpClient = HttpClient();

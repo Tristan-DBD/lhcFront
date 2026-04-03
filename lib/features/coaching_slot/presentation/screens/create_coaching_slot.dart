@@ -24,7 +24,7 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
   DateTime? _slotDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  int? _selectedCoachId;
+  String? _selectedCoachId;
   List<User> _coaches = [];
 
   // Focus nodes pour la navigation entre les champs

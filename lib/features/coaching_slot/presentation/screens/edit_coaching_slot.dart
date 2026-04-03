@@ -30,7 +30,7 @@ class _EditCoachingSlotScreenState extends State<EditCoachingSlotScreen> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   DateTime? _slotDate;
-  int? _selectedCoachId;
+  String? _selectedCoachId;
   List<User> _coaches = [];
 
   @override

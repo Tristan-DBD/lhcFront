@@ -87,7 +87,7 @@ class SupabaseStorageService {
 
   /// Met à jour la photo de profil via l'API
   Future<http.Response> updateProfileImage(
-    int userId,
+    String userId,
     Uint8List fileBytes,
     String fileName,
     String token,

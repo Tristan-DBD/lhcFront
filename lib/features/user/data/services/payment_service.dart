@@ -3,7 +3,7 @@ import '../../../../core/api/http_client.dart';
 
 class PaymentService {
   static Future<ApiResponse<Map<String, dynamic>>> toggleMonth({
-    required int userId,
+    required String userId,
     required int year,
     required String month,
   }) async {
@@ -36,7 +36,7 @@ class PaymentService {
   }
 
   static Future<ApiResponse<List<Map<String, dynamic>>>> getPayments(
-    int userId,
+    String userId,
   ) async {
     try {
       final httpClient = HttpClient();

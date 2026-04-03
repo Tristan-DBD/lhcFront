@@ -13,7 +13,7 @@ class ProgramService {
 
   /// Upload un fichier Excel pour un programme utilisateur
   Future<ApiResponse<Map<String, dynamic>>> uploadProgram(
-    int userId,
+    String userId,
     Uint8List fileBytes,
     String fileName,
   ) async {
@@ -66,7 +66,7 @@ class ProgramService {
   }
 
   /// Supprime un programme par nom de fichier
-  Future<ApiResponse<void>> deleteProgram(int userId, String fileName) async {
+  Future<ApiResponse<void>> deleteProgram(String userId, String fileName) async {
     try {
       final responseBody = await _httpClient.deleteWithBody(
         '/user/program/$userId',
@@ -92,7 +92,7 @@ class ProgramService {
   }
 
   /// Récupère la liste des programmes d'un utilisateur
-  Future<ApiResponse<List<dynamic>>> getPrograms(int userId) async {
+  Future<ApiResponse<List<dynamic>>> getPrograms(String userId) async {
     try {
       final responseBody = await _httpClient.get('/user/program/$userId');
 
@@ -116,7 +116,7 @@ class ProgramService {
 
   /// Met à jour la photo de profil via l'API (Inclus ici car présent dans l'ancien service)
   Future<ApiResponse<void>> updateProfileImage(
-    int userId,
+    String userId,
     File imageFile,
   ) async {
     try {

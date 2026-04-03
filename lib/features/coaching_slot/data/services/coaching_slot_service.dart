@@ -32,7 +32,7 @@ class CoachingSlotService {
   static Future<ApiResponse<List<CoachingSlot>>> getAll({
     DateTime? startDate,
     DateTime? endDate,
-    int? coachId,
+    String? coachId,
   }) async {
     try {
       final httpClient = HttpClient();
@@ -57,7 +57,7 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<CoachingSlot>> getById(int id) async {
+  static Future<ApiResponse<CoachingSlot>> getById(String id) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.get('/coaching-slots/$id');
@@ -73,7 +73,7 @@ class CoachingSlotService {
   }
 
   static Future<ApiResponse<CoachingSlot>> update(
-    int id,
+    String id,
     Map<String, dynamic> slotData,
   ) async {
     try {
@@ -105,7 +105,7 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<bool>> delete(int id) async {
+  static Future<ApiResponse<bool>> delete(String id) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.delete('/coaching-slots/$id');
@@ -122,10 +122,7 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<bool>> bookSlot(
-    int userId,
-    int slotId,
-  ) async {
+  static Future<ApiResponse<bool>> bookSlot(String userId, String slotId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.post(
@@ -145,7 +142,7 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<bool>> cancelBooking(int userId, int slotId) async {
+  static Future<ApiResponse<bool>> cancelBooking(String userId, String slotId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.post(
@@ -167,7 +164,7 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<List<SlotBooking>>> getBookings(int slotId) async {
+  static Future<ApiResponse<List<SlotBooking>>> getBookings(String slotId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.get('/coaching-slots/bookings/$slotId');
@@ -207,13 +204,13 @@ class CoachingSlotService {
   static String _buildQueryParams(
     DateTime? startDate,
     DateTime? endDate,
-    int? coachId,
+    String? coachId,
   ) {
     final params = <String>[];
 
     if (startDate != null && endDate != null) {
-      params.add('startDate=${startDate!.toUtc().toIso8601String()}');
-      params.add('endDate=${endDate!.toUtc().toIso8601String()}');
+      params.add('startDate=${startDate.toUtc().toIso8601String()}');
+      params.add('endDate=${endDate.toUtc().toIso8601String()}');
     }
 
     if (coachId != null) {

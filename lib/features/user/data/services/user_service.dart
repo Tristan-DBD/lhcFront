@@ -29,7 +29,7 @@ class UserService {
   }
 
   static Future<ApiResponse<User>> update(
-    int userId,
+    String userId,
     Map<String, dynamic> userData,
   ) async {
     try {
@@ -90,7 +90,7 @@ class UserService {
     }
   }
 
-  static Future<ApiResponse<User>> getUserById(int userId) async {
+  static Future<ApiResponse<User>> getUserById(String userId) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.get('/user/$userId');

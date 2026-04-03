@@ -40,7 +40,7 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
     AppSnackBar.show(context, message: message, isError: !success);
   }
 
-  Future<void> _handleDelete(int slotId) async {
+  Future<void> _handleDelete(String slotId) async {
     final success = await _controller.deleteSlot(slotId);
     _showSnackBar(
       success ? 'Créneau supprimé avec succès' : 'Erreur lors de la suppression',
@@ -48,7 +48,7 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
     );
   }
 
-  Future<void> _handleBook(int slotId) async {
+  Future<void> _handleBook(String slotId) async {
     final success = await _controller.bookSlot(slotId);
     _showSnackBar(
       success
@@ -58,7 +58,7 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
     );
   }
 
-  Future<void> _handleCancel(int slotId) async {
+  Future<void> _handleCancel(String slotId) async {
     final success = await _controller.cancelBooking(slotId);
     _showSnackBar(
       success

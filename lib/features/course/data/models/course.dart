@@ -1,9 +1,9 @@
 import '../../../user/data/models/user.dart';
 
 class CourseRegistration {
-  final int id;
-  final int userId;
-  final int courseId;
+  final String id;
+  final String userId;
+  final String courseId;
   final User? user;
   final DateTime createdAt;
 
@@ -17,9 +17,9 @@ class CourseRegistration {
 
   factory CourseRegistration.fromJson(Map<String, dynamic> json) {
     return CourseRegistration(
-      id: json['id'] as int? ?? 0,
-      userId: json['userId'] as int? ?? 0,
-      courseId: json['courseId'] as int? ?? 0,
+      id: json['id'] as String? ?? '0',
+      userId: json['userId'] as String? ?? '0',
+      courseId: json['courseId'] as String? ?? '0',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
@@ -29,13 +29,13 @@ class CourseRegistration {
 }
 
 class Course {
-  final int id;
+  final String id;
   final String title;
   final String? description;
   final int durationMinutes;
   final int maxParticipants;
   final DateTime startAt;
-  final int coachId;
+  final String coachId;
   final List<CourseRegistration> registrations;
 
   Course({
@@ -58,7 +58,7 @@ class Course {
         : <CourseRegistration>[];
 
     return Course(
-      id: json['id'] as int? ?? 0,
+      id: json['id'] as String? ?? '0',
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       durationMinutes: json['durationMinutes'] as int? ?? 0,
@@ -66,12 +66,12 @@ class Course {
       startAt: json['startAt'] != null
           ? DateTime.parse(json['startAt'] as String)
           : DateTime.now(),
-      coachId: json['coachId'] as int? ?? 0,
+      coachId: json['coachId'] as String? ?? '0',
       registrations: registrations,
     );
   }
 
-  bool isUserRegistered(int? userId) {
+  bool isUserRegistered(String? userId) {
     if (userId == null) return false;
     return registrations.any((r) => r.userId == userId);
   }

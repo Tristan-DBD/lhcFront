@@ -30,7 +30,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   // Variables d'état
   bool _isLoading = false;
   DateTime? _courseDateTime;
-  int? _selectedCoachId;
+  String? _selectedCoachId;
   List<User> _coaches = [];
 
   // Controllers

@@ -7,7 +7,7 @@ class CourseController extends ChangeNotifier {
   List<Course> courses = [];
   String? errorMessage;
   bool isLoading = true;
-  int? userId;
+  String? userId;
   String? userRole;
 
   CourseController() {
@@ -87,7 +87,7 @@ class CourseController extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteCourse(int courseId) async {
+  Future<bool> deleteCourse(String courseId) async {
     try {
       final response = await CourseService.delete(courseId);
       if (response.success && response.data == true) {
@@ -100,7 +100,7 @@ class CourseController extends ChangeNotifier {
     }
   }
 
-  Future<bool> registerToCourse(int courseId) async {
+  Future<bool> registerToCourse(String courseId) async {
     if (userId == null) return false;
     try {
       final response = await CourseService.registerToCourse(courseId, userId!);
@@ -114,7 +114,7 @@ class CourseController extends ChangeNotifier {
     }
   }
 
-  Future<bool> unregisterFromCourse(int courseId) async {
+  Future<bool> unregisterFromCourse(String courseId) async {
     if (userId == null) return false;
     try {
       final response = await CourseService.unregisterFromCourse(

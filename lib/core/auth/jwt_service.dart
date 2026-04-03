@@ -62,9 +62,9 @@ class JwtService {
     }
   }
 
-  static Future<int?> getUserId() async {
+  static Future<String?> getUserId() async {
     final payload = await getTokenPayload();
-    return payload?['id'];
+    return payload?['id']?.toString();
   }
 
   static Future<String?> getUserRole() async {
