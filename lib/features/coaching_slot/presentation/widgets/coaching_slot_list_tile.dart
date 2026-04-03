@@ -84,7 +84,7 @@ class CoachingSlotListTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Créneau avec ${slot.coachId != '0' ? 'Coach #${slot.coachId}' : 'Coach'}',
+                'Créneau avec ${slot.coach?.name ?? 'Coach'}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

@@ -33,6 +33,7 @@ class CoachingSlot {
   final DateTime startTime;
   final DateTime endTime;
   final String coachId;
+  final User? coach;
   final List<SlotBooking> bookings;
 
   CoachingSlot({
@@ -40,6 +41,7 @@ class CoachingSlot {
     required this.startTime,
     required this.endTime,
     required this.coachId,
+    this.coach,
     this.bookings = const [],
   });
 
@@ -67,6 +69,7 @@ class CoachingSlot {
           ? DateTime.parse(json['endTime'] as String)
           : DateTime.now(),
       coachId: json['coachId'] as String? ?? '0',
+      coach: json['coach'] != null ? User.fromJson(json['coach']) : null,
       bookings: bookings,
     );
   }

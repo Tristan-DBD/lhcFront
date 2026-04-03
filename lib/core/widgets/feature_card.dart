@@ -62,8 +62,7 @@ class _FeatureCardState extends State<FeatureCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Container(
+                Container(
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
@@ -79,10 +78,8 @@ class _FeatureCardState extends State<FeatureCard> {
                     ),
                     child: Icon(widget.icon, color: widget.color, size: 26),
                   ),
-                ),
                 const SizedBox(height: 12),
-                Flexible(
-                  child: Text(
+                Text(
                     widget.title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -94,10 +91,8 @@ class _FeatureCardState extends State<FeatureCard> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
                 const SizedBox(height: 4),
-                Flexible(
-                  child: Text(
+                Text(
                     widget.description,
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -107,7 +102,6 @@ class _FeatureCardState extends State<FeatureCard> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
               ],
             ),
           ),

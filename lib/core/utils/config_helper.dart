@@ -2,9 +2,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Config {
   static Future<void> load() async {
-    // Tente de charger le fichier .env en fallback pour les builds locaux
+    // En dev local, charger le .env depuis les assets
+    // En prod, les variables viennent des --dart-define via String.fromEnvironment
     try {
-      await dotenv.load();
+      await dotenv.load(fileName: '.env');
     } catch (e) {
       // Ignorer si le fichier n'est pas présent (ex: en prod Railway via Docker)
     }
