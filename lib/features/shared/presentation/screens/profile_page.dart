@@ -16,6 +16,7 @@ import '../../../../core/widgets/atoms/info_tile.dart';
 import '../../../../core/widgets/atoms/stat_display.dart';
 import '../../../../core/theme/user_role.dart';
 import '../../../user/data/services/payment_service.dart';
+import 'package:lhc_front/features/shop/presentation/screens/athlete_shop_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -355,6 +356,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           label: 'Cours Collectifs',
                           page: const ListCoursePage(),
                         ),
+                      const SizedBox(height: 20),
+                      _buildOptionRow(
+                        label: 'Boutique',
+                        page: const AthleteShopScreen(),
+                      ),
                     ],
                   ),
                 ),
@@ -412,11 +418,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     switch (exerciseName.toLowerCase()) {
       case 'squat':
-        return '${finalStats['squat'] ?? 0} kg';
+        return '${(finalStats['squat'] ?? 0).toString().replaceAll('.', ',')} kg';
       case 'bench':
-        return '${finalStats['bench'] ?? 0} kg';
+        return '${(finalStats['bench'] ?? 0).toString().replaceAll('.', ',')} kg';
       case 'deadlift':
-        return '${finalStats['deadlift'] ?? 0} kg';
+        return '${(finalStats['deadlift'] ?? 0).toString().replaceAll('.', ',')} kg';
       default:
         return '0 kg';
     }

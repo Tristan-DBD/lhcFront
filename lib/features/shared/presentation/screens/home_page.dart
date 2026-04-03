@@ -5,6 +5,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/feature_card.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/auth/auth_service.dart';
+import '../../../shop/presentation/screens/shop_management_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -128,6 +129,19 @@ class _HomePageState extends State<HomePage> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (context) => const ListCoursePage(),
+                            ),
+                          );
+                        },
+                      ),
+                      FeatureCard(
+                        icon: Icons.shopping_bag,
+                        title: 'Boutique',
+                        description: 'Gérer les stocks',
+                        color: Colors.orange,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const ShopManagementScreen(),
                             ),
                           );
                         },

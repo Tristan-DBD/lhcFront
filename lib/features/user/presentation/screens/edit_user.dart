@@ -61,7 +61,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _ageController = TextEditingController(text: widget.user.age.toString());
     _phoneController = TextEditingController(text: widget.user.phone);
     _weightController = TextEditingController(
-      text: widget.user.weight.toString(),
+      text: widget.user.weight.toString().replaceAll('.', ','),
     );
     if (widget.user.stat.isEmpty) {
       _squatController = TextEditingController(text: '0');
@@ -74,13 +74,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
       final finalStats = messageStats ?? stats;
 
       _squatController = TextEditingController(
-        text: finalStats['squat'].toString(),
+        text: finalStats['squat'].toString().replaceAll('.', ','),
       );
       _benchController = TextEditingController(
-        text: finalStats['bench'].toString(),
+        text: finalStats['bench'].toString().replaceAll('.', ','),
       );
       _deadliftController = TextEditingController(
-        text: finalStats['deadlift'].toString(),
+        text: finalStats['deadlift'].toString().replaceAll('.', ','),
       );
     }
   }
@@ -172,7 +172,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
       }
 
       final newWeight =
-          int.tryParse(_weightController.text) ?? widget.user.weight;
+          double.tryParse(_weightController.text.replaceAll(',', '.')) ?? widget.user.weight.toDouble();
       if (newWeight != widget.user.weight) {
         updatedData['weight'] = newWeight;
       }

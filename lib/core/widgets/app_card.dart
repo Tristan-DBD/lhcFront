@@ -34,18 +34,20 @@ class _AppCardState extends State<AppCard> {
 
   @override
   Widget build(BuildContext context) {
-    Widget card = Container(
+    final theme = Theme.of(context);
+    
+    final card = Container(
       width: widget.width,
       height: widget.height,
       padding: widget.padding ?? const EdgeInsets.all(20.0),
       margin: widget.margin,
       decoration: BoxDecoration(
-        color: widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
+        color: widget.backgroundColor ?? theme.colorScheme.surface,
         borderRadius: widget.borderRadius ?? BorderRadius.circular(16.0),
         boxShadow: widget.boxShadow ??
             [
               BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(_isPressed ? 0.05 : 0.08),
+                color: theme.shadowColor.withValues(alpha: _isPressed ? 0.05 : 0.08),
                 blurRadius: _isPressed ? 5 : 12,
                 offset: Offset(0, _isPressed ? 2 : 6),
               ),
@@ -72,4 +74,3 @@ class _AppCardState extends State<AppCard> {
     return card;
   }
 }
-

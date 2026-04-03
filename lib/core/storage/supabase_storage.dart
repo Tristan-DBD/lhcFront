@@ -16,21 +16,23 @@ class SupabaseStorageService {
 
   /// Récupère l'URL signée d'une image de profil
   Future<String> getProfileImageUrl(String imagePath) async {
+    return getImageUrlSync(imagePath);
+  }
+
+  /// Rend l'URL publique de façon synchrone pour éviter les FutureBuilders inutiles
+  String getImageUrlSync(String imagePath) {
     if (imagePath.isEmpty) {
       return '';
     }
 
-    // Normaliser le chemin (enlever le slash initial si présent)
     final normalizedPath = imagePath.startsWith('/')
         ? imagePath.substring(1)
         : imagePath;
 
     try {
-      // Utiliser l'URL publique puisque le bucket est configuré ainsi
-      final publicUrl = _supabase.storage
+      return _supabase.storage
           .from(_bucketName)
           .getPublicUrl(normalizedPath);
-      return publicUrl;
     } catch (e) {
       return '';
     }

@@ -7,6 +7,7 @@ import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/role_badge.dart';
+import '../../../../core/widgets/atoms/app_filter_chip.dart';
 
 class ListUserPage extends StatefulWidget {
   const ListUserPage({super.key});
@@ -107,13 +108,13 @@ class _ListUserPageState extends State<ListUserPage> {
                               Container(
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.people_outline,
                                   size: 64,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                                 ),
                               ),
                               const SizedBox(height: 32),
@@ -192,38 +193,12 @@ class _ListUserPageState extends State<ListUserPage> {
   }
 
   Widget _buildFilterChip(UserController controller, String role, String label) {
-    final isSelected = controller.selectedRoles.contains(role);
-    final theme = Theme.of(context);
-    
-    return FilterChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected
-              ? theme.colorScheme.secondary
-              : theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      selected: isSelected,
+    return AppFilterChip(
+      label: label,
+      isSelected: controller.selectedRoles.contains(role),
       onSelected: (bool selected) {
         controller.toggleRoleFilter(role);
       },
-      backgroundColor: Colors.transparent,
-      selectedColor: theme.colorScheme.secondary.withOpacity(0.1),
-      checkmarkColor: theme.colorScheme.secondary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(
-          color: isSelected
-              ? theme.colorScheme.secondary
-              : theme.colorScheme.outline.withOpacity(0.2),
-          width: isSelected ? 1.5 : 1,
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 

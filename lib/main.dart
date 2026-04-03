@@ -6,10 +6,12 @@ import 'package:lhc_front/core/utils/config_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/utils/navigation_helper.dart';
+import 'package:provider/provider.dart';
+import 'features/shop/presentation/controllers/cart_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('fr_FR', null);
+  await initializeDateFormatting('fr_FR');
   try {
     await Config.load();
 
@@ -19,14 +21,21 @@ Future<void> main() async {
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   } catch (e) {
     debugPrint("Erreur d'initialisation : $e");
-    // L'application continuera mais les fonctionnalités liées à Supabase échoueront proprement
   }
   
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const MyApp());
+  
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartController()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 final supabase = Supabase.instance.client;

@@ -61,7 +61,7 @@ class CourseController extends ChangeNotifier {
 
     try {
       // Charger une plage de 3 mois autour du jour focalisé
-      final startDate = DateTime(_focusedDay.year, _focusedDay.month - 1, 1);
+      final startDate = DateTime(_focusedDay.year, _focusedDay.month - 1);
       final endDate = DateTime(_focusedDay.year, _focusedDay.month + 2, 0);
 
       final response = await CourseService.getAll(

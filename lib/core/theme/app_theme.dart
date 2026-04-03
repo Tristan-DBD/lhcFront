@@ -133,15 +133,25 @@ class AppColorsData {
   // Métriques utilitaires pour les dégradés
   Gradient getPrimaryGradient({double opacity1 = 0.1, double opacity2 = 0.3}) {
     return LinearGradient(
-      colors: [primary.withOpacity(opacity1), primary.withOpacity(opacity2)],
+      colors: [
+        primary.withValues(alpha: opacity1),
+        primary.withValues(alpha: opacity2),
+      ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
   }
 
-  Gradient getCustomGradient(Color color, {double opacity1 = 0.1, double opacity2 = 0.3}) {
+  Gradient getCustomGradient(
+    Color color, {
+    double opacity1 = 0.1,
+    double opacity2 = 0.3,
+  }) {
     return LinearGradient(
-      colors: [color.withOpacity(opacity1), color.withOpacity(opacity2)],
+      colors: [
+        color.withValues(alpha: opacity1),
+        color.withValues(alpha: opacity2),
+      ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
@@ -184,9 +194,9 @@ class AppColorsData {
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: primary,
-        onPrimary: brightness == Brightness.light
-            ? white
-            : const Color(0xFF1A1A1A),
+        onPrimary: brightness == Brightness.light ? white : const Color(0xFF1A1A1A),
+        primaryContainer: brightness == Brightness.light ? secondary.withValues(alpha: 0.1) : surfaceVariant,
+        onPrimaryContainer: brightness == Brightness.light ? secondary : white,
         secondary: secondary,
         onSecondary: white,
         surface: surface,

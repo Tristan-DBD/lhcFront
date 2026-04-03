@@ -14,12 +14,12 @@ class MessageService {
 
   /// Affiche un message de succès
   static void showSuccess(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message, isError: false);
+    AppSnackBar.show(context, message: message);
   }
 
   /// Affiche un message d'information
   static void showInfo(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message, isError: false);
+    AppSnackBar.show(context, message: message);
   }
 
   /// Affiche un message d'avertissement

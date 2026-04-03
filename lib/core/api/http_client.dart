@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'api_service.dart';
 import '../storage/local_storage.dart';
 
@@ -86,6 +88,27 @@ class HttpClient {
     }
   }
 
+  /// Effectue une requête PATCH
+  Future<Map<String, dynamic>> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      );
+      return _handleResponse(response, retry: () async => http.patch(
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+        headers: _apiService.headers(token: await StorageService.getToken()),
+        body: body != null ? jsonEncode(body) : null,
+      ));
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// Effectue une requête DELETE
   Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
@@ -123,12 +146,88 @@ class HttpClient {
     }
   }
 
+  /// Effectue une requête Multipart (Upload)
+  Future<Map<String, dynamic>> upload(
+    String endpoint,
+    File file,
+    String field, {
+    Map<String, dynamic>? body,
+    String method = 'PUT',
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        method,
+        Uri.parse('${_apiService.apiUrl}$endpoint'),
+      );
+
+      final token = await StorageService.getToken();
+      request.headers.addAll(_apiService.headers(token: token));
+
+      // Détection manuelle du type MIME pour garantir la compatibilité backend
+      final extension = file.path.split('.').last.toLowerCase();
+      MediaType contentType;
+      
+      switch (extension) {
+        case 'png':
+          contentType = MediaType('image', 'png');
+          break;
+        case 'jpg':
+        case 'jpeg':
+          contentType = MediaType('image', 'jpeg');
+          break;
+        case 'heic':
+          contentType = MediaType('image', 'heic');
+          break;
+        case 'heif':
+          contentType = MediaType('image', 'heif');
+          break;
+        default:
+          contentType = MediaType('image', 'jpeg'); // Fallback vers jpeg
+      }
+
+      // Ajouter le fichier avec le type MIME explicite
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          field,
+          file.path,
+          contentType: contentType,
+        ),
+      );
+
+      // Ajouter les autres champs si présents
+      if (body != null) {
+        body.forEach((key, value) {
+          if (value is String) {
+            request.fields[key] = value;
+          } else {
+            request.fields[key] = jsonEncode(value);
+          }
+        });
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   bool _isRefreshing = false;
 
   /// Gère la réponse HTTP
   Future<Map<String, dynamic>> _handleResponse(http.Response response, {Future<http.Response> Function()? retry}) async {
     try {
-      final responseBody = jsonDecode(response.body);
+      // Cas spécifique du No Content
+      if (response.statusCode == 204) {
+        return {'success': true, 'data': []};
+      }
+
+      final body = response.body.trim();
+      final Map<String, dynamic> responseBody = body.isEmpty 
+          ? {'success': response.statusCode >= 200 && response.statusCode < 300}
+          : jsonDecode(body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return responseBody;
@@ -157,8 +256,7 @@ class HttpClient {
         throw HttpException('Session expirée', 401);
       } else {
         // Pour les réponses d'erreur valides (400, 422, etc.)
-        if (responseBody is Map<String, dynamic> &&
-            responseBody.containsKey('success') &&
+        if (responseBody.containsKey('success') &&
             responseBody.containsKey('data')) {
           return responseBody;
         }

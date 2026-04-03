@@ -60,7 +60,7 @@ class CourseListTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -166,7 +166,7 @@ class CourseListTile extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -219,7 +219,7 @@ class CourseListTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

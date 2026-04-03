@@ -48,7 +48,9 @@ class _FeatureCardState extends State<FeatureCard> {
             borderRadius: BorderRadius.circular(16.0),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(_isPressed ? 0.05 : 0.08),
+                color: Theme.of(context).shadowColor.withValues(
+                  alpha: _isPressed ? 0.05 : 0.08,
+                ),
                 blurRadius: _isPressed ? 5 : 12,
                 offset: Offset(0, _isPressed ? 2 : 6),
               ),
@@ -69,7 +71,7 @@ class _FeatureCardState extends State<FeatureCard> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.color.withOpacity(0.2),
+                          color: widget.color.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -100,7 +102,7 @@ class _FeatureCardState extends State<FeatureCard> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
