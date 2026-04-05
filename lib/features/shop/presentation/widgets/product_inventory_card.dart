@@ -37,7 +37,9 @@ class ProductInventoryCard extends StatelessWidget {
     final List<String> allSizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
     final stocks = product['stocks'] as List<dynamic>? ?? [];
     final existingSizes = stocks.map((s) => s['size']).toList();
-    final availableSizes = allSizes.where((s) => !existingSizes.contains(s)).toList();
+    final availableSizes = allSizes
+        .where((s) => !existingSizes.contains(s))
+        .toList();
 
     if (availableSizes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,14 +55,18 @@ class ProductInventoryCard extends StatelessWidget {
         content: Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: availableSizes.map((size) => AppFilterChip(
-            label: size,
-            isSelected: false,
-            onSelected: (_) {
-              Navigator.pop(context);
-              onAddSize(size);
-            },
-          )).toList(),
+          children: availableSizes
+              .map(
+                (size) => AppFilterChip(
+                  label: size,
+                  isSelected: false,
+                  onSelected: (_) {
+                    Navigator.pop(context);
+                    onAddSize(size);
+                  },
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -70,7 +76,7 @@ class ProductInventoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final stocks = product['stocks'] as List<dynamic>? ?? [];
     final String name = product['name'] ?? 'Inconnu';
-    final int id = product['id'] ?? 0;
+    final String id = product['id'] ?? '0';
     final String? imageUri = product['imageUri'];
 
     return AppCard(
@@ -89,24 +95,33 @@ class ProductInventoryCard extends StatelessWidget {
                     child: Container(
                       width: 80,
                       height: 80,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       child: imageUri != null
                           ? FutureBuilder<String>(
-                              future: SupabaseStorageService().getProfileImageUrl(imageUri),
+                              future: SupabaseStorageService()
+                                  .getProfileImageUrl(imageUri),
                               builder: (context, snapshot) {
-                                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                if (snapshot.hasData &&
+                                    snapshot.data!.isNotEmpty) {
                                   return Image.network(
                                     snapshot.data!,
                                     fit: BoxFit.cover,
-                                    key: ValueKey(imageUri), // Important pour forcer le refresh
-                                    errorBuilder: (_, __, ___) => const Icon(Icons.image),
+                                    key: ValueKey(
+                                      imageUri,
+                                    ), // Important pour forcer le refresh
+                                    errorBuilder: (_, __, ___) =>
+                                        const Icon(Icons.image),
                                   );
                                 }
                                 return const Center(
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 );
                               },
@@ -126,7 +141,11 @@ class ProductInventoryCard extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 12,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -145,14 +164,6 @@ class ProductInventoryCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ID: #$id',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      ),
-                    ),
                     const SizedBox(height: 8),
                     // Nouveau : Champ de prix
                     Row(
@@ -162,15 +173,22 @@ class ProductInventoryCard extends StatelessWidget {
                         Expanded(
                           child: InkWell(
                             onTap: () async {
-                              final currentPriceStr = (product['price'] ?? 0).toString().replaceAll('.', ',');
-                              final controller = TextEditingController(text: currentPriceStr);
+                              final currentPriceStr = (product['price'] ?? 0)
+                                  .toString()
+                                  .replaceAll('.', ',');
+                              final controller = TextEditingController(
+                                text: currentPriceStr,
+                              );
                               final newPrice = await showDialog<double>(
                                 context: context,
                                 builder: (context) => AlertDialog(
                                   title: const Text('Modifier le prix'),
                                   content: TextField(
                                     controller: controller,
-                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
                                     decoration: const InputDecoration(
                                       suffixText: '€',
                                       labelText: 'Prix de vente',
@@ -183,7 +201,12 @@ class ProductInventoryCard extends StatelessWidget {
                                       child: const Text('Annuler'),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () => Navigator.pop(context, double.tryParse(controller.text.replaceAll(',', '.'))),
+                                      onPressed: () => Navigator.pop(
+                                        context,
+                                        double.tryParse(
+                                          controller.text.replaceAll(',', '.'),
+                                        ),
+                                      ),
                                       child: const Text('Valider'),
                                     ),
                                   ],
@@ -198,14 +221,18 @@ class ProductInventoryCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(
                                   Icons.edit,
                                   size: 12,
-                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.5),
                                 ),
                               ],
                             ),
@@ -250,7 +277,15 @@ class ProductInventoryCard extends StatelessWidget {
           const SizedBox(height: 8),
           // Liste des tailles et compteurs triés
           ...(() {
-            final List<String> sizeOrder = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+            final List<String> sizeOrder = [
+              'XS',
+              'S',
+              'M',
+              'L',
+              'XL',
+              '2XL',
+              '3XL',
+            ];
             final sortedStocks = List<dynamic>.from(stocks)
               ..sort((a, b) {
                 final aIndex = sizeOrder.indexOf(a['size']);
@@ -271,7 +306,9 @@ class ProductInventoryCard extends StatelessWidget {
                       height: 32,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -295,7 +332,9 @@ class ProductInventoryCard extends StatelessWidget {
                       icon: const Icon(Icons.delete_outline, size: 18),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.6),
                       visualDensity: VisualDensity.compact,
                     ),
                   ],

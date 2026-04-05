@@ -5,7 +5,7 @@ import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 
 class CreateUserScreen extends StatefulWidget {
   const CreateUserScreen({super.key});
@@ -81,21 +81,14 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
 
         if (mounted) {
           final message = result.errorMessage ?? 'Erreur lors de la création';
-          AppSnackBar.show(
-            context,
-            message: message,
-            isError: true,
-          );
+          MessageService.showError(context, message);
         }
       } else {
         setState(() {
           _isLoading = false;
         });
         if (mounted) {
-          AppSnackBar.show(
-            context,
-            message: 'Utilisateur créé avec succès',
-          );
+          MessageService.showSuccess(context, 'Utilisateur créé avec succès');
           Navigator.pop(context);
         }
       }
@@ -104,11 +97,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        AppSnackBar.show(
-          context,
-          message: 'Erreur lors de la création : $e',
-          isError: true,
-        );
+        MessageService.showError(context, 'Erreur lors de la création : $e');
       }
     }
   }
@@ -245,9 +234,7 @@ class _CreateUserScreenState extends State<CreateUserScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: AppColors.border,
-            ),
+            border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(8.0),
             color: AppColors.inputBackground,
           ),

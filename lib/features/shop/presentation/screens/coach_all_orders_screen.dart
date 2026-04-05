@@ -58,7 +58,7 @@ class _CoachAllOrdersScreenState extends State<CoachAllOrdersScreen> {
     }
   }
 
-  Future<void> _updateStatus(int orderId, String newStatus) async {
+  Future<void> _updateStatus(String orderId, String newStatus) async {
     final oldOrders = List.from(_orders);
 
     // Optimistic UI Update
@@ -109,7 +109,7 @@ class _CoachAllOrdersScreenState extends State<CoachAllOrdersScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Modifier l\'état (Commande #${order['id']})'),
+          title: const Text('Modifier l\'état (Commande '),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: statuses.map((status) {
@@ -240,8 +240,8 @@ class _CoachAllOrdersScreenState extends State<CoachAllOrdersScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Commande #${order['id']}',
-                                                style: const TextStyle(
+                                                'Commande',
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 16,
                                                 ),
@@ -316,9 +316,7 @@ class _CoachAllOrdersScreenState extends State<CoachAllOrdersScreen> {
       backgroundColor: chipColor.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.transparent : chipColor,
-        ),
+        side: BorderSide(color: isSelected ? Colors.transparent : chipColor),
       ),
     );
   }

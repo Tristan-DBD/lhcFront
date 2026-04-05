@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CartItem {
-  final int productId;
+  final String productId;
   final String productName;
   final String size;
   final double price;
@@ -33,12 +33,12 @@ class CartController extends ChangeNotifier {
 
   double get totalPrice => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
 
-  int getItemQuantity(int productId, String size) {
+  int getItemQuantity(String productId, String size) {
     final key = '${productId}_$size';
     return _items[key]?.quantity ?? 0;
   }
 
-  void addItem(int productId, String productName, String size, double price, [String? imageUri]) {
+  void addItem(String productId, String productName, String size, double price, [String? imageUri]) {
     final key = '${productId}_$size';
     if (_items.containsKey(key)) {
       _items[key]!.quantity += 1;
@@ -54,7 +54,7 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeItem(int productId, String size) {
+  void removeItem(String productId, String size) {
     final key = '${productId}_$size';
     if (_items.containsKey(key)) {
       if (_items[key]!.quantity > 1) {

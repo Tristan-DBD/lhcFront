@@ -63,10 +63,10 @@ class CoachingSlot {
     return CoachingSlot(
       id: json['id'] as String? ?? '0',
       startTime: json['startTime'] != null
-          ? DateTime.parse(json['startTime'] as String)
+          ? DateTime.parse(json['startTime'] as String).toLocal()
           : DateTime.now(),
       endTime: json['endTime'] != null
-          ? DateTime.parse(json['endTime'] as String)
+          ? DateTime.parse(json['endTime'] as String).toLocal()
           : DateTime.now(),
       coachId: json['coachId'] as String? ?? '0',
       coach: json['coach'] != null ? User.fromJson(json['coach']) : null,

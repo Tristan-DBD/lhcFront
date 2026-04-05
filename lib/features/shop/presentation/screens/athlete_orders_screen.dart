@@ -59,7 +59,7 @@ class _AthleteOrdersScreenState extends State<AthleteOrdersScreen> {
     }
   }
 
-  Future<void> _cancelOrder(int orderId) async {
+  Future<void> _cancelOrder(String orderId) async {
     final confirm = await MessageService.showConfirmationDialog(
       context,
       title: 'Annuler la commande',
@@ -105,9 +105,9 @@ class _AthleteOrdersScreenState extends State<AthleteOrdersScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Commande #${order['id']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          const Text(
+                            'Statut:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           OrderStatusBadge(status: status),
                         ],

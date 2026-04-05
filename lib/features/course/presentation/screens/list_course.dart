@@ -5,7 +5,7 @@ import '../widgets/course_list_tile.dart';
 import 'add_course.dart';
 import 'edit_course.dart';
 import '../../data/models/course.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 
 class ListCoursePage extends StatefulWidget {
   const ListCoursePage({super.key});
@@ -37,7 +37,11 @@ class _ListCoursePageState extends State<ListCoursePage>
 
   void _showSnackBar(String message, bool success) {
     if (!mounted) return;
-    AppSnackBar.show(context, message: message, isError: !success);
+    if (success) {
+      MessageService.showSuccess(context, message);
+    } else {
+      MessageService.showError(context, message);
+    }
   }
 
   Future<void> _handleDelete(String courseId) async {
@@ -73,7 +77,9 @@ class _ListCoursePageState extends State<ListCoursePage>
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        final dailyCourses = _controller.getCoursesForDay(_controller.selectedDay);
+        final dailyCourses = _controller.getCoursesForDay(
+          _controller.selectedDay,
+        );
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -87,8 +93,8 @@ class _ListCoursePageState extends State<ListCoursePage>
                   child: _controller.isLoading
                       ? _buildSkeletonList()
                       : dailyCourses.isEmpty
-                          ? _buildEmptyState()
-                          : _buildCourseList(dailyCourses),
+                      ? _buildEmptyState()
+                      : _buildCourseList(dailyCourses),
                 ),
               ],
             ),
@@ -116,8 +122,14 @@ class _ListCoursePageState extends State<ListCoursePage>
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
-          leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).colorScheme.primary),
-          rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.primary),
+          leftChevronIcon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          rightChevronIcon: Icon(
+            Icons.chevron_right,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         calendarStyle: CalendarStyle(
           selectedDecoration: BoxDecoration(
@@ -140,7 +152,9 @@ class _ListCoursePageState extends State<ListCoursePage>
             color: Theme.of(context).colorScheme.onSurface,
           ),
           weekendTextStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           markerDecoration: BoxDecoration(
             color: Theme.of(context).colorScheme.secondary,
@@ -149,11 +163,15 @@ class _ListCoursePageState extends State<ListCoursePage>
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.8),
             fontWeight: FontWeight.bold,
           ),
           weekendStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -209,13 +227,17 @@ class _ListCoursePageState extends State<ListCoursePage>
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.calendar_today_outlined,
                 size: 64,
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 32),
@@ -268,7 +290,9 @@ class _ListCoursePageState extends State<ListCoursePage>
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -280,13 +304,17 @@ class _ListCoursePageState extends State<ListCoursePage>
                   Container(
                     width: 150,
                     height: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     width: 100,
                     height: 10,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                   ),
                 ],
               ),

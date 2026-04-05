@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lhc_front/features/shop/presentation/screens/create_product_screen.dart';
 import 'dart:io';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/message_service.dart';
@@ -52,7 +53,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _updateStock(int productId, String size, int newQuantity) async {
+  Future<void> _updateStock(String productId, String size, int newQuantity) async {
     if (newQuantity < 0) return;
 
     // Optimization: OPTIMISTIC LOCAL UPDATE
@@ -97,7 +98,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _addSize(int productId, String size) async {
+  Future<void> _addSize(String productId, String size) async {
     try {
       final response = await _shopService.addSize(productId, size);
       if (response['success'] == true) {
@@ -130,7 +131,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _updateImage(int productId, File image) async {
+  Future<void> _updateImage(String productId, File image) async {
     // Show local preview immediately would be ideal, but let's sync first to avoid confusion
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -166,7 +167,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _updatePrice(int productId, double newPrice) async {
+  Future<void> _updatePrice(String productId, double newPrice) async {
     if (newPrice < 0) return;
 
     // Mise à jour optimiste locale
@@ -199,7 +200,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _deleteSize(int productId, String size) async {
+  Future<void> _deleteSize(String productId, String size) async {
     final confirm = await MessageService.showConfirmationDialog(
       context,
       title: 'Confirmation',
@@ -212,10 +213,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
       try {
         final response = await _shopService.deleteSize(productId, size);
         if (response['success'] == true) {
-          final productIndex = _products.indexWhere((p) => p['id'] == productId);
+          final productIndex = _products.indexWhere(
+            (p) => p['id'] == productId,
+          );
           if (productIndex != -1) {
             setState(() {
-              final stocks = List<dynamic>.from(_products[productIndex]['stocks']);
+              final stocks = List<dynamic>.from(
+                _products[productIndex]['stocks'],
+              );
               stocks.removeWhere((s) => s['size'] == size);
               _products[productIndex]['stocks'] = stocks;
             });
@@ -225,7 +230,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
           }
         } else {
           if (mounted) {
-            MessageService.showError(context, response['data']?[0]?['message'] ?? 'Erreur lors de la suppression');
+            MessageService.showError(
+              context,
+              response['data']?[0]?['message'] ??
+                  'Erreur lors de la suppression',
+            );
           }
         }
       } catch (e) {
@@ -236,7 +245,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _deleteProduct(int productId) async {
+  Future<void> _deleteProduct(String productId) async {
     final confirm = await MessageService.showConfirmationDialog(
       context,
       title: 'Confirmation',
@@ -274,7 +283,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
           IconButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const AthleteShopScreen()),
+              MaterialPageRoute(
+                builder: (context) => const AthleteShopScreen(),
+              ),
             ),
             icon: const Icon(Icons.remove_red_eye_outlined),
             tooltip: 'Aperçu Boutique',
@@ -296,15 +307,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 final product = _products[index];
                 return ProductInventoryCard(
                   product: product,
-                  onStockChanged: (size, quantity) => _updateStock(
-                    product['id'],
-                    size,
-                    quantity,
-                  ),
-                  onPriceChanged: (newPrice) => _updatePrice(
-                    product['id'],
-                    newPrice,
-                  ),
+                  onStockChanged: (size, quantity) =>
+                      _updateStock(product['id'], size, quantity),
+                  onPriceChanged: (newPrice) =>
+                      _updatePrice(product['id'], newPrice),
                   onAddSize: (size) => _addSize(product['id'], size),
                   onDeleteSize: (size) => _deleteSize(product['id'], size),
                   onImageUpdate: (image) => _updateImage(product['id'], image),
@@ -319,10 +325,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return AppEmptyState(
       icon: Icons.inventory_2_outlined,
       title: 'Aucun produit en stock',
-      message: 'Votre inventaire est vide. Ajoutez des produits pour les rendre disponibles.',
+      message:
+          'Votre inventaire est vide. Ajoutez des produits pour les rendre disponibles.',
       actionButton: AppButton(
         text: 'Créer un produit',
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CreateProductScreen()),
+        ),
       ),
     );
   }

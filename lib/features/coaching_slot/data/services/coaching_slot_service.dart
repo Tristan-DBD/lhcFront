@@ -51,9 +51,13 @@ class CoachingSlotService {
         response['message'] ?? 'Erreur lors de la récupération des créneaux',
       );
     } catch (e) {
-      return ApiResponse.error(
-        'Erreur lors de la récupération des créneaux: $e',
-      );
+      // Capturer les HttpException pour avoir plus de détails
+      String errorMessage = 'Erreur lors de la récupération des créneaux: $e';
+      if (e.toString().contains('403')) {
+        errorMessage =
+            'Permission refusée: accès aux créneaux non autorisé pour ce rôle';
+      }
+      return ApiResponse.error(errorMessage);
     }
   }
 
@@ -122,7 +126,10 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<bool>> bookSlot(String userId, String slotId) async {
+  static Future<ApiResponse<bool>> bookSlot(
+    String userId,
+    String slotId,
+  ) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.post(
@@ -142,7 +149,10 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<bool>> cancelBooking(String userId, String slotId) async {
+  static Future<ApiResponse<bool>> cancelBooking(
+    String userId,
+    String slotId,
+  ) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.post(
@@ -164,7 +174,9 @@ class CoachingSlotService {
     }
   }
 
-  static Future<ApiResponse<List<SlotBooking>>> getBookings(String slotId) async {
+  static Future<ApiResponse<List<SlotBooking>>> getBookings(
+    String slotId,
+  ) async {
     try {
       final httpClient = HttpClient();
       final response = await httpClient.get('/coaching-slots/bookings/$slotId');

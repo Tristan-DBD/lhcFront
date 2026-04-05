@@ -5,7 +5,7 @@ import '../widgets/coaching_slot_list_tile.dart';
 import 'create_coaching_slot.dart';
 import 'edit_coaching_slot.dart';
 import '../../data/models/coaching_slot.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 
 class ListCoachingSlotPage extends StatefulWidget {
   const ListCoachingSlotPage({super.key});
@@ -37,13 +37,19 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
 
   void _showSnackBar(String message, bool success) {
     if (!mounted) return;
-    AppSnackBar.show(context, message: message, isError: !success);
+    if (success) {
+      MessageService.showSuccess(context, message);
+    } else {
+      MessageService.showError(context, message);
+    }
   }
 
   Future<void> _handleDelete(String slotId) async {
     final success = await _controller.deleteSlot(slotId);
     _showSnackBar(
-      success ? 'Créneau supprimé avec succès' : 'Erreur lors de la suppression',
+      success
+          ? 'Créneau supprimé avec succès'
+          : 'Erreur lors de la suppression',
       success,
     );
   }
@@ -87,8 +93,8 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
                   child: _controller.isLoading
                       ? _buildSkeletonList()
                       : dailySlots.isEmpty
-                          ? _buildEmptyState()
-                          : _buildSlotList(dailySlots),
+                      ? _buildEmptyState()
+                      : _buildSlotList(dailySlots),
                 ),
               ],
             ),
@@ -116,8 +122,14 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
-          leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).colorScheme.primary),
-          rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.primary),
+          leftChevronIcon: Icon(
+            Icons.chevron_left,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          rightChevronIcon: Icon(
+            Icons.chevron_right,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         calendarStyle: CalendarStyle(
           selectedDecoration: BoxDecoration(
@@ -140,7 +152,9 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
             color: Theme.of(context).colorScheme.onSurface,
           ),
           weekendTextStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           markerDecoration: BoxDecoration(
             color: Theme.of(context).colorScheme.secondary,
@@ -149,11 +163,15 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.8),
             fontWeight: FontWeight.bold,
           ),
           weekendStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -209,13 +227,17 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.schedule_outlined,
                 size: 64,
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 32),
@@ -268,7 +290,9 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -280,13 +304,17 @@ class _ListCoachingSlotPageState extends State<ListCoachingSlotPage>
                   Container(
                     width: 150,
                     height: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     width: 100,
                     height: 10,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                   ),
                 ],
               ),

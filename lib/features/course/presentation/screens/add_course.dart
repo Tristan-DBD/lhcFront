@@ -3,7 +3,7 @@ import '../../data/services/course_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../user/data/models/user.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/date_time_picker.dart';
@@ -74,10 +74,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
     // Vérifier si une date a été sélectionnée
     if (_courseDateTime == null) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Veuillez sélectionner une date et heure pour le cours',
-          isError: true,
+          'Veuillez sélectionner une date et heure pour le cours',
         );
       }
       return;
@@ -86,11 +85,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
     // Vérifier si un coach a été sélectionné
     if (_selectedCoachId == null) {
       if (mounted) {
-        AppSnackBar.show(
-          context,
-          message: 'Veuillez sélectionner un coach',
-          isError: true,
-        );
+        MessageService.showError(context, 'Veuillez sélectionner un coach');
       }
       return;
     }
@@ -111,10 +106,7 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
       final response = await CourseService.create(courseData);
       if (response.success) {
         if (mounted) {
-          AppSnackBar.show(
-            context,
-            message: 'Cours créé avec succès',
-          );
+          MessageService.showSuccess(context, 'Cours créé avec succès');
         }
         // Notifier la page parente que le cours a été créé
         widget.onCourseCreated?.call();
@@ -122,10 +114,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Erreur lors de la création du cours: $e',
-          isError: true,
+          'Erreur lors de la création du cours: $e',
         );
       }
     } finally {
@@ -256,7 +247,9 @@ class _AddCourseScreenState extends State<AddCourseScreen> {
                 if (dateTime == null) {
                   return 'Veuillez sélectionner une date et heure';
                 }
-                if (dateTime.isBefore(DateTime.now())) {
+                if (dateTime.isBefore(
+                  DateTime.now().subtract(const Duration(days: 1)),
+                )) {
                   return 'La date ne peut pas être dans le passé';
                 }
                 return null;

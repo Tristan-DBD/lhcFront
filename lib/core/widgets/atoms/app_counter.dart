@@ -45,10 +45,7 @@ class AppCounter extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Text(
               value.toString(),
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
           _buildButton(
@@ -69,13 +66,15 @@ class AppCounter extends StatelessWidget {
     bool isActive = false,
   }) {
     final activeColor = color ?? Theme.of(context).colorScheme.secondary;
-    
+
     return IconButton(
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       padding: const EdgeInsets.all(8),
       constraints: const BoxConstraints(),
-      color: isActive ? activeColor : Theme.of(context).colorScheme.onSurfaceVariant,
+      color: isActive
+          ? activeColor
+          : Theme.of(context).colorScheme.onSurfaceVariant,
       disabledColor: Theme.of(context).disabledColor.withValues(alpha: 0.3),
     );
   }

@@ -4,7 +4,7 @@ import '../../data/models/course.dart';
 import '../../data/services/course_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/date_time_picker.dart';
@@ -116,28 +116,23 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
 
       if (response.success) {
         if (mounted) {
-          AppSnackBar.show(
-            context,
-            message: 'Cours mis à jour avec succès',
-          );
+          MessageService.showSuccess(context, 'Cours mis à jour avec succès');
         }
         widget.onCourseUpdated?.call();
         Navigator.pop(context);
       } else {
         if (mounted) {
-          AppSnackBar.show(
+          MessageService.showError(
             context,
-            message: 'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
-            isError: true,
+            'Erreur lors de la mise à jour: ${response.errorMessage ?? 'Erreur inconnue'}',
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Erreur lors de la mise à jour du cours: $e',
-          isError: true,
+          'Erreur lors de la mise à jour du cours: $e',
         );
       }
     } finally {

@@ -5,7 +5,7 @@ import '../../data/services/coaching_slot_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../user/data/models/user.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/generic_dropdown.dart';
 
@@ -15,7 +15,8 @@ class CreateCoachingSlotScreen extends StatefulWidget {
   const CreateCoachingSlotScreen({super.key, this.onSlotCreated});
 
   @override
-  State<CreateCoachingSlotScreen> createState() => _CreateCoachingSlotScreenState();
+  State<CreateCoachingSlotScreen> createState() =>
+      _CreateCoachingSlotScreenState();
 }
 
 class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
@@ -84,13 +85,13 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
 
       final slotData = {
         'coachId': _selectedCoachId,
-        'startTime': startTime.toIso8601String(),
-        'endTime': endTime.toIso8601String(),
+        'startTime': startTime.toUtc().toIso8601String(),
+        'endTime': endTime.toUtc().toIso8601String(),
       };
       final response = await CoachingSlotService.create(slotData);
       if (response.success) {
         if (mounted) {
-          AppSnackBar.show(context, message: 'Créneau créé avec succès');
+          MessageService.showSuccess(context, 'Créneau créé avec succès');
         }
         // Notifier la page parente que le créneau a été créé
         widget.onSlotCreated?.call();
@@ -98,10 +99,9 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Erreur lors de la création du créneau: $e',
-          isError: true,
+          'Erreur lors de la création du créneau: $e',
         );
       }
     } finally {
@@ -155,7 +155,9 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
                 if (dateTime == null) {
                   return 'Veuillez sélectionner une date';
                 }
-                if (dateTime.isBefore(DateTime.now())) {
+                if (dateTime.isBefore(
+                  DateTime.now().subtract(const Duration(days: 1)),
+                )) {
                   return 'La date ne peut pas être dans le passé';
                 }
                 return null;
@@ -195,7 +197,8 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
                 if (_startTime != null) {
                   final start = _startTime!;
                   if (start.hour > time.hour ||
-                      (start.hour == time.hour && start.minute >= time.minute)) {
+                      (start.hour == time.hour &&
+                          start.minute >= time.minute)) {
                     return 'L\'heure de fin doit être après l\'heure de début';
                   }
                 }

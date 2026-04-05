@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_snackbar.dart';
 
 /// Service centralisé pour afficher des messages à l'utilisateur
 class MessageService {
@@ -9,22 +8,46 @@ class MessageService {
 
   /// Affiche un message d'erreur
   static void showError(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message, isError: true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Affiche un message de succès
   static void showSuccess(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Affiche un message d'information
   static void showInfo(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Affiche un message d'avertissement
   static void showWarning(BuildContext context, String message) {
-    AppSnackBar.show(context, message: message, isError: true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Affiche un message personnalisé
@@ -33,7 +56,15 @@ class MessageService {
     required String message,
     bool isError = false,
   }) {
-    AppSnackBar.show(context, message: message, isError: isError);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Cache tous les snackbars actuellement affichés

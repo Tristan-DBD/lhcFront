@@ -8,33 +8,33 @@ class ShopService {
     return _httpClient.get('/shop');
   }
 
-  Future<Map<String, dynamic>> updateStock(int productId, String size, int quantity) async {
+  Future<Map<String, dynamic>> updateStock(String productId, String size, int quantity) async {
     return _httpClient.put('/shop/$productId/stock/$size', body: {
       'quantity': quantity,
     });
   }
 
-  Future<Map<String, dynamic>> addSize(int productId, String size) async {
+  Future<Map<String, dynamic>> addSize(String productId, String size) async {
     return _httpClient.post('/shop/$productId/size', body: {
       'size': size,
     });
   }
 
-  Future<Map<String, dynamic>> updateProductImage(int productId, File image) async {
+  Future<Map<String, dynamic>> updateProductImage(String productId, File image) async {
     return _httpClient.upload('/shop/$productId/image', image, 'productImage');
   }
 
-  Future<Map<String, dynamic>> updatePrice(int productId, double price) async {
+  Future<Map<String, dynamic>> updatePrice(String productId, double price) async {
     return _httpClient.put('/shop/$productId/price', body: {
       'price': price,
     });
   }
 
-  Future<Map<String, dynamic>> deleteSize(int productId, String size) async {
+  Future<Map<String, dynamic>> deleteSize(String productId, String size) async {
     return _httpClient.delete('/shop/$productId/stock/$size');
   }
 
-  Future<Map<String, dynamic>> deleteProduct(int productId) async {
+  Future<Map<String, dynamic>> deleteProduct(String productId) async {
     return _httpClient.delete('/shop/$productId');
   }
 

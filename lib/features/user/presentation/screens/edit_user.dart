@@ -6,7 +6,7 @@ import '../../data/services/user_service.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/role_badge.dart';
-import '../../../../core/utils/message_service.dart';
 import '../../../../core/widgets/atoms/section_header.dart';
 
 class EditUserScreen extends StatefulWidget {
@@ -126,17 +125,16 @@ class _EditUserScreenState extends State<EditUserScreen> {
       });
 
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showInfo(
           context,
-          message: 'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
+          'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
         );
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Erreur lors de la sélection de l\'image: $e',
-          isError: true,
+          'Erreur lors de la sélection de l\'image: $e',
         );
       }
     }
@@ -172,7 +170,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
       }
 
       final newWeight =
-          double.tryParse(_weightController.text.replaceAll(',', '.')) ?? widget.user.weight.toDouble();
+          double.tryParse(_weightController.text.replaceAll(',', '.')) ??
+          widget.user.weight.toDouble();
       if (newWeight != widget.user.weight) {
         updatedData['weight'] = newWeight;
       }
@@ -222,10 +221,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
         if (!response.success) {
           if (mounted) {
-            AppSnackBar.show(
+            MessageService.showError(
               context,
-              message: response.errorMessage ?? 'Erreur lors de la mise à jour',
-              isError: true,
+              response.errorMessage ?? 'Erreur lors de la mise à jour',
             );
           }
           setState(() {

@@ -3,10 +3,10 @@ import '../../../../core/api/http_client.dart';
 class OrderService {
   final HttpClient _httpClient = HttpClient();
 
-  Future<Map<String, dynamic>> createOrder(List<Map<String, dynamic>> items) async {
-    return _httpClient.post('/order', body: {
-      'items': items,
-    });
+  Future<Map<String, dynamic>> createOrder(
+    List<Map<String, dynamic>> items,
+  ) async {
+    return _httpClient.post('/order', body: {'items': items});
   }
 
   Future<Map<String, dynamic>> getMyOrders() async {
@@ -17,7 +17,7 @@ class OrderService {
     return _httpClient.get('/order');
   }
 
-  Future<Map<String, dynamic>> cancelOrder(int orderId) async {
+  Future<Map<String, dynamic>> cancelOrder(String orderId) async {
     return _httpClient.delete('/order/$orderId');
   }
 
@@ -25,7 +25,13 @@ class OrderService {
     return _httpClient.get('/order/summary');
   }
 
-  Future<Map<String, dynamic>> updateOrderStatus(int orderId, String status) async {
-    return _httpClient.patch('/order/$orderId/status', body: {'status': status});
+  Future<Map<String, dynamic>> updateOrderStatus(
+    String orderId,
+    String status,
+  ) async {
+    return _httpClient.patch(
+      '/order/$orderId/status',
+      body: {'status': status},
+    );
   }
 }

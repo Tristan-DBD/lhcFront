@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lhc_front/core/utils/app_snackbar.dart';
+import 'package:lhc_front/core/utils/message_service.dart';
 import 'package:lhc_front/features/coaching_slot/presentation/screens/list_coaching_slot.dart';
 import '../../../../core/auth/auth_service.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
@@ -99,9 +99,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (!response.success) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: response.errorMessage ?? 'Erreur inconnue',
+          response.errorMessage ?? 'Erreur inconnue',
         );
         // Revert local state if needed (the widget already toggled it visually)
         setState(() {

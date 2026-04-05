@@ -4,7 +4,7 @@ import '../../data/models/coaching_slot.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../user/data/models/user.dart';
 import '../../../../core/utils/responsive_helper.dart';
-import '../../../../core/utils/app_snackbar.dart';
+import '../../../../core/utils/message_service.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/date_picker.dart';
 import '../../../../core/widgets/time_picker.dart';
@@ -105,7 +105,7 @@ class _EditCoachingSlotScreenState extends State<EditCoachingSlotScreen> {
       );
       if (response.success) {
         if (mounted) {
-          AppSnackBar.show(context, message: 'Créneau mis à jour avec succès');
+          MessageService.showSuccess(context, 'Créneau mis à jour avec succès');
         }
         // Notifier la page parente que le créneau a été mis à jour
         widget.onSlotUpdated?.call();
@@ -113,10 +113,9 @@ class _EditCoachingSlotScreenState extends State<EditCoachingSlotScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
+        MessageService.showError(
           context,
-          message: 'Erreur lors de la mise à jour du créneau: $e',
-          isError: true,
+          'Erreur lors de la mise à jour du créneau: $e',
         );
       }
     } finally {
