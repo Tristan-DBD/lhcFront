@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Import pour kIsWeb
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../../../../core/widgets/app_card.dart';
@@ -12,7 +13,7 @@ class ProductInventoryCard extends StatelessWidget {
   final Function(double newPrice) onPriceChanged;
   final Function(String size) onAddSize;
   final Function(String size) onDeleteSize;
-  final Function(File image) onImageUpdate;
+  final Function({File? image, Uint8List? bytes, String? filename}) onImageUpdate;
   final VoidCallback onDelete;
 
   const ProductInventoryCard({
@@ -27,9 +28,17 @@ class ProductInventoryCard extends StatelessWidget {
   });
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null) {
-      onImageUpdate(File(result.files.single.path!));
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result != null) {
+      final file = result.files.single;
+      onImageUpdate(
+        image: kIsWeb ? null : (file.path != null ? File(file.path!) : null),
+        bytes: file.bytes,
+        filename: file.name,
+      );
     }
   }
 

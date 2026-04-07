@@ -62,12 +62,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _weightController = TextEditingController(
       text: widget.user.weight.toString().replaceAll('.', ','),
     );
-    if (widget.user.stat.isEmpty) {
+    if (widget.user.stats.isEmpty) {
       _squatController = TextEditingController(text: '0');
       _benchController = TextEditingController(text: '0');
       _deadliftController = TextEditingController(text: '0');
     } else {
-      final stats = widget.user.stat[0];
+      final stats = widget.user.stats[0];
       // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
       final messageStats = stats['message'] as Map<String, dynamic>?;
       final finalStats = messageStats ?? stats;
@@ -177,8 +177,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
       }
 
       // pour les stats
-      if (widget.user.stat.isNotEmpty) {
-        final stats = widget.user.stat[0];
+      if (widget.user.stats.isNotEmpty) {
+        final stats = widget.user.stats[0];
         // Vérifier s'il y a un message imbriqué (cas des stats mises à jour)
         final messageStats = stats['message'] as Map<String, dynamic>?;
         final finalStats = messageStats ?? stats;
@@ -246,7 +246,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
         if (updatedStatsResult == null) return;
         final updatedStats = updatedStatsResult;
 
-        if (widget.user.stat.isEmpty) {
+        if (widget.user.stats.isEmpty) {
           // Création de nouvelles stats
           if (updatedStats['data'] is List && updatedStats['data'].isNotEmpty) {
             updatedUser = widget.user.copyWith(
@@ -256,7 +256,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
               age: updatedData['age'],
               weight: updatedData['weight'],
               imageUri: newImagePath,
-              stat: [updatedStats['data'][0]],
+              stats: [updatedStats['data'][0]],
             );
           } else {
             updatedUser = widget.user.copyWith(
@@ -271,7 +271,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
         } else {
           // Mise à jour des stats existantes
           final List<Map<String, dynamic>> newStats = List.from(
-            widget.user.stat,
+            widget.user.stats,
           );
           if (updatedStats['data'] is List && updatedStats['data'].isNotEmpty) {
             newStats[0] = {...newStats[0], ...updatedStats['data'][0]};
@@ -282,7 +282,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
               age: updatedData['age'],
               weight: updatedData['weight'],
               imageUri: newImagePath,
-              stat: newStats,
+              stats: newStats,
             );
           } else {
             updatedUser = widget.user.copyWith(
@@ -373,7 +373,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     try {
       ApiResponse<Map<String, dynamic>> result;
 
-      if (widget.user.stat.isEmpty) {
+      if (widget.user.stats.isEmpty) {
         result = await StatService.create({
           'userId': widget.user.id,
           'squat':

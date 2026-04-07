@@ -23,6 +23,10 @@ class _ListUserPageState extends State<ListUserPage> {
   void initState() {
     super.initState();
     _controller = UserController();
+    // On lance l'initialisation après le premier build pour s'assurer que tout soit prêt
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.init();
+    });
   }
 
   @override
@@ -108,13 +112,19 @@ class _ListUserPageState extends State<ListUserPage> {
                               Container(
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.3),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.people_outline,
                                   size: 64,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                      .withValues(alpha: 0.5),
                                 ),
                               ),
                               const SizedBox(height: 32),
@@ -123,7 +133,9 @@ class _ListUserPageState extends State<ListUserPage> {
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   letterSpacing: -0.5,
                                 ),
                               ),
@@ -133,7 +145,9 @@ class _ListUserPageState extends State<ListUserPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   height: 1.5,
                                 ),
                               ),
@@ -144,43 +158,49 @@ class _ListUserPageState extends State<ListUserPage> {
                     )
                   else
                     Expanded(
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              ResponsiveHelper.getGridCrossAxisCount(context),
-                          crossAxisSpacing: ResponsiveHelper.getGridSpacing(
-                            context,
-                          ),
-                          mainAxisSpacing: ResponsiveHelper.getGridSpacing(
-                            context,
-                          ),
-                          childAspectRatio: 0.8,
-                        ),
-                        itemCount: _controller.users.length,
-                        itemBuilder: (context, index) {
-                          final user = _controller.users[index];
-                          return _buildUserCard(
-                            name: user.fullName,
-                            role: user.role,
-                            imageUri: user.imageUri,
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ProfilePage(
-                                    user: user,
-                                    canEditPayments:
-                                        _controller.canEditPayments,
+                      child: RefreshIndicator(
+                        onRefresh: () => _controller.loadUsers(),
+                        child: GridView.builder(
+                          physics:
+                              const AlwaysScrollableScrollPhysics(), // Important pour le Pull-to-refresh
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount:
+                                    ResponsiveHelper.getGridCrossAxisCount(
+                                      context,
+                                    ),
+                                crossAxisSpacing:
+                                    ResponsiveHelper.getGridSpacing(context),
+                                mainAxisSpacing:
+                                    ResponsiveHelper.getGridSpacing(context),
+                                childAspectRatio: 0.8,
+                              ),
+                          itemCount: _controller.users.length,
+                          itemBuilder: (context, index) {
+                            final user = _controller.users[index];
+                            return _buildUserCard(
+                              name: user.fullName,
+                              role: user.role,
+                              imageUri: user.imageUri,
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProfilePage(
+                                      user: user,
+                                      canEditPayments:
+                                          _controller.canEditPayments,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
 
-                              if (result != null && result is User) {
-                                _controller.updateUserInList(result);
-                              }
-                            },
-                          );
-                        },
+                                if (result != null && result is User) {
+                                  _controller.updateUserInList(result);
+                                }
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
                 ],
@@ -192,7 +212,11 @@ class _ListUserPageState extends State<ListUserPage> {
     );
   }
 
-  Widget _buildFilterChip(UserController controller, String role, String label) {
+  Widget _buildFilterChip(
+    UserController controller,
+    String role,
+    String label,
+  ) {
     return AppFilterChip(
       label: label,
       isSelected: controller.selectedRoles.contains(role),

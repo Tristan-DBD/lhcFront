@@ -31,8 +31,8 @@ RUN flutter pub get
 
 COPY . .
 
-# Créer un .env vide dans assets pour éviter les erreurs 404 au chargement (flutter_dotenv)
-RUN mkdir -p assets && touch assets/.env
+# Créer un .env vide à la racine pour éviter les erreurs de compilation (flutter_dotenv)
+RUN touch .env
 
 ARG API_URL
 ARG SUPABASE_URL
@@ -65,9 +65,14 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 8080
 
-# Version du cache (Détonateur Nginx) - v0.5
-ARG CACHE_VERSION=v0.5
+# Versions et Cache (Détonateurs)
+ARG CACHE_VERSION
+ARG APP_VERSION
 ENV CACHE_VERSION=${CACHE_VERSION}
+ENV APP_VERSION=${APP_VERSION}
 
-# At runtime, Railway injects $PORT. Use envsubst to inject it into nginx config.
-CMD sh -c "envsubst '\$PORT \$CACHE_VERSION' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+# At runtime, replace placeholders in Nginx config AND index.html
+CMD sh -c "envsubst '\$PORT \$CACHE_VERSION' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && \
+           envsubst '\$APP_VERSION' < /usr/share/nginx/html/index.html > /usr/share/nginx/html/index.tmp && \
+           mv /usr/share/nginx/html/index.tmp /usr/share/nginx/html/index.html && \
+           nginx -g 'daemon off;'"

@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Text(
-                        'Bienvenue bouffon !',
+                        'Bienvenue !',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

@@ -7,7 +7,7 @@ class User {
   final int age;
   final double weight;
   final String role;
-  final List<Map<String, dynamic>> stat;
+  final List<Map<String, dynamic>> stats;
   final String imageUri;
   final List<Map<String, dynamic>> progUri;
   final List<Map<String, dynamic>> payments;
@@ -21,7 +21,7 @@ class User {
     required this.age,
     required this.weight,
     required this.role,
-    required this.stat,
+    required this.stats,
     required this.imageUri,
     required this.progUri,
     required this.payments,
@@ -29,11 +29,11 @@ class User {
 
   // Factory constructor pour créer un User depuis JSON
   factory User.fromJson(Map<String, dynamic> json) {
-    // Gérer le cast du tableau stat correctement
-    List<Map<String, dynamic>> statList = [];
-    if (json['stat'] != null) {
-      final statData = json['stat'] as List;
-      statList = statData.map((item) => item as Map<String, dynamic>).toList();
+    // Gérer le cast du tableau stats correctement
+    List<Map<String, dynamic>> statsList = [];
+    if (json['stats'] != null) {
+      final statsData = json['stats'] as List;
+      statsList = statsData.map((item) => item as Map<String, dynamic>).toList();
     }
 
     List<Map<String, dynamic>> progUriList = [];
@@ -61,7 +61,7 @@ class User {
       age: json['age'] as int? ?? 0,
       weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
       role: json['role'] as String? ?? '',
-      stat: statList,
+      stats: statsList,
       imageUri: json['imageUri'] as String? ?? 'profileImage/default.png',
       progUri: progUriList,
       payments: paymentList,
@@ -79,7 +79,7 @@ class User {
       'age': age,
       'weight': weight,
       'role': role,
-      'stat': stat,
+      'stats': stats,
       'imageUri': imageUri,
       'progUri': progUri,
       'payments': payments,
@@ -99,7 +99,7 @@ class User {
     int? age,
     double? weight,
     String? role,
-    List<Map<String, dynamic>>? stat,
+    List<Map<String, dynamic>>? stats,
     String? imageUri,
     List<Map<String, dynamic>>? progUri,
     List<Map<String, dynamic>>? payments,
@@ -113,7 +113,7 @@ class User {
       age: age ?? this.age,
       weight: weight ?? this.weight,
       role: role ?? this.role,
-      stat: stat ?? this.stat,
+      stats: stats ?? this.stats,
       imageUri: imageUri ?? this.imageUri,
       progUri: progUri ?? this.progUri,
       payments: payments ?? this.payments,
@@ -122,6 +122,6 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, surname: $surname, email: $email, phone: $phone, age: $age, weight: $weight, role: $role, stat: $stat, imageUri: $imageUri)';
+    return 'User(id: $id, name: $name, surname: $surname, email: $email, phone: $phone, age: $age, weight: $weight, role: $role, stats: $stats, imageUri: $imageUri)';
   }
 }

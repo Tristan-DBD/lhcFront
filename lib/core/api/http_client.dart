@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // Pour kIsWeb
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'api_service.dart';
@@ -149,8 +150,10 @@ class HttpClient {
   /// Effectue une requête Multipart (Upload)
   Future<Map<String, dynamic>> upload(
     String endpoint,
-    File file,
+    File? file,
     String field, {
+    Uint8List? bytes,
+    String? filename,
     Map<String, dynamic>? body,
     String method = 'PUT',
   }) async {
@@ -163,36 +166,43 @@ class HttpClient {
       final token = await StorageService.getToken();
       request.headers.addAll(_apiService.headers(token: token));
 
-      // Détection manuelle du type MIME pour garantir la compatibilité backend
-      final extension = file.path.split('.').last.toLowerCase();
-      MediaType contentType;
-      
-      switch (extension) {
-        case 'png':
-          contentType = MediaType('image', 'png');
-          break;
-        case 'jpg':
-        case 'jpeg':
-          contentType = MediaType('image', 'jpeg');
-          break;
-        case 'heic':
-          contentType = MediaType('image', 'heic');
-          break;
-        case 'heif':
-          contentType = MediaType('image', 'heif');
-          break;
-        default:
-          contentType = MediaType('image', 'jpeg'); // Fallback vers jpeg
-      }
+      if (kIsWeb) {
+        if (bytes == null) throw Exception('Bytes required for web upload');
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            field,
+            bytes,
+            filename: filename ?? 'upload.jpg',
+            contentType: MediaType('image', 'jpeg'),
+          ),
+        );
+      } else {
+        if (file == null) throw Exception('File required for native upload');
+        // Détection manuelle du type MIME pour garantir la compatibilité backend
+        final extension = file.path.split('.').last.toLowerCase();
+        MediaType contentType;
+        
+        switch (extension) {
+          case 'png':
+            contentType = MediaType('image', 'png');
+            break;
+          case 'jpg':
+          case 'jpeg':
+            contentType = MediaType('image', 'jpeg');
+            break;
+          default:
+            contentType = MediaType('image', 'jpeg'); // Fallback vers jpeg
+        }
 
-      // Ajouter le fichier avec le type MIME explicite
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          field,
-          file.path,
-          contentType: contentType,
-        ),
-      );
+        // Ajouter le fichier avec le type MIME explicite
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            field,
+            file.path,
+            contentType: contentType,
+          ),
+        );
+      }
 
       // Ajouter les autres champs si présents
       if (body != null) {

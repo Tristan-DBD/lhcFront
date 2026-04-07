@@ -5,7 +5,7 @@ class Config {
     // En dev local, charger le .env depuis les assets
     // En prod, les variables viennent des --dart-define via String.fromEnvironment
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load();
     } catch (e) {
       // Ignorer si le fichier n'est pas présent (ex: en prod Railway via Docker)
     }

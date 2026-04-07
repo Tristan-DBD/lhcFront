@@ -15,8 +15,8 @@ class EditCoachingSlotScreen extends StatefulWidget {
   final Function()? onSlotUpdated;
 
   const EditCoachingSlotScreen({
-    super.key,
     required this.slot,
+    super.key,
     this.onSlotUpdated,
   });
 

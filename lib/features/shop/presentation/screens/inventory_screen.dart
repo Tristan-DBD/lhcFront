@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/features/shop/presentation/screens/create_product_screen.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/message_service.dart';
 import '../widgets/product_inventory_card.dart';
@@ -131,7 +132,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _updateImage(String productId, File image) async {
+  Future<void> _updateImage(String productId, {File? image, Uint8List? bytes, String? filename}) async {
     // Show local preview immediately would be ideal, but let's sync first to avoid confusion
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,7 +141,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
 
     try {
-      final response = await _shopService.updateProductImage(productId, image);
+      final response = await _shopService.updateProductImage(
+        productId,
+        image: image,
+        bytes: bytes,
+        filename: filename,
+      );
       if (response['success'] == true) {
         final productIndex = _products.indexWhere((p) => p['id'] == productId);
         if (productIndex != -1 && mounted) {
@@ -313,7 +319,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       _updatePrice(product['id'], newPrice),
                   onAddSize: (size) => _addSize(product['id'], size),
                   onDeleteSize: (size) => _deleteSize(product['id'], size),
-                  onImageUpdate: (image) => _updateImage(product['id'], image),
+                  onImageUpdate: ({image, bytes, filename}) =>
+                      _updateImage(product['id'], image: image, bytes: bytes, filename: filename),
                   onDelete: () => _deleteProduct(product['id']),
                 );
               },

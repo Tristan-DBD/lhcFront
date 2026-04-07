@@ -68,7 +68,6 @@ class CoachingSlotController extends ChangeNotifier {
       final response = await CoachingSlotService.getAll(
         startDate: startDate,
         endDate: endDate,
-        coachId: null,
       );
 
       if (response.success) {

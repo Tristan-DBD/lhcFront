@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // Pour kIsWeb
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
@@ -29,6 +30,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   bool _isLoading = false;
   bool _showImageInput = false;
   File? _selectedImage;
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
 
   @override
   void dispose() {
@@ -38,11 +41,22 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true, // Important pour le Web
+    );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null) {
+      final file = result.files.single;
       setState(() {
-        _selectedImage = File(result.files.single.path!);
+        _selectedImageName = file.name;
+        _selectedImageBytes = file.bytes;
+        // Correction Senior : On ne touche JAMAIS à .path sur le Web, même pour un test
+        if (!kIsWeb) {
+          if (file.path != null) {
+            _selectedImage = File(file.path!);
+          }
+        }
       });
     }
   }
@@ -66,7 +80,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           'price': double.parse(_priceController.text.replaceAll(',', '.')),
           'sizes': _selectedSizes,
         },
-        _showImageInput ? _selectedImage : null,
+        imageFile: _showImageInput ? _selectedImage : null,
+        bytes: _showImageInput ? _selectedImageBytes : null,
+        filename: _showImageInput ? _selectedImageName : null,
       );
 
       if (response['success'] == true) {
@@ -226,13 +242,18 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                             ).colorScheme.secondary.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: _selectedImage != null
+                          child: (_selectedImage != null || (kIsWeb && _selectedImageBytes != null))
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(
-                                    _selectedImage!,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: kIsWeb
+                                      ? Image.memory(
+                                          _selectedImageBytes!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          _selectedImage!,
+                                          fit: BoxFit.cover,
+                                        ),
                                 )
                               : Column(
                                   mainAxisAlignment: MainAxisAlignment.center,

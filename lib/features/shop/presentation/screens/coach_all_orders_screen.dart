@@ -239,7 +239,7 @@ class _CoachAllOrdersScreenState extends State<CoachAllOrdersScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text(
+                                              const Text(
                                                 'Commande',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,

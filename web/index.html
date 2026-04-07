@@ -142,7 +142,7 @@
   <!-- SCRIPT DE NETTOYAGE NUCLÉAIRE (Anti-Cache) -->
   <script>
     (function () {
-      const APP_VERSION = 'v0.5'; // Synchronisé avec le Détonateur Nginx
+      const APP_VERSION = '${APP_VERSION}'; // Injecté dynamiquement par Nginx/Docker
       const currentVersion = localStorage.getItem('lhc_app_version');
 
       if (currentVersion !== APP_VERSION) {
@@ -157,16 +157,23 @@
             // On vide aussi le cache des fichiers
             if ('caches' in window) {
               caches.keys().then(function (names) {
-                for (let name of names) caches.delete(name);
+                for (let name of names) {
+                  console.log('Suppression du cache :', name);
+                  caches.delete(name);
+                }
               });
             }
-            window.location.reload(true);
+            // Fallback : On vire aussi les cookies si le header a merdé
+            document.cookie.split(";").forEach(function (c) {
+              document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            console.log('Nettoyage terminé. On laisse le Service Worker gérer le rechargement final.');
           });
         } else {
           localStorage.setItem('lhc_app_version', APP_VERSION);
         }
       }
-    })();
+    })(); 
   </script>
 
   <div id="loading">
@@ -180,7 +187,7 @@
     </div>
   </div>
 
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js?v=${APP_VERSION}" async></script>
   <script>
     // --- GESTION AUTO-UPDATE SENIOR-PROOF ---
 

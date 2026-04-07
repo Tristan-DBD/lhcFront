@@ -415,10 +415,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String _getStatValue(String exerciseName) {
-    if (_currentUser.stat.isEmpty) {
+    if (_currentUser.stats.isEmpty) {
       return '0 kg';
     }
-    final stats = _currentUser.stat.first;
+    final stats = _currentUser.stats.first;
     final messageStats = stats['message'] as Map<String, dynamic>?;
     final finalStats = messageStats ?? stats;
 

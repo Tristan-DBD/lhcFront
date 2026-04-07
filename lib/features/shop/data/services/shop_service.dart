@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import '../../../../core/api/http_client.dart';
 
 class ShopService {
@@ -20,8 +21,14 @@ class ShopService {
     });
   }
 
-  Future<Map<String, dynamic>> updateProductImage(String productId, File image) async {
-    return _httpClient.upload('/shop/$productId/image', image, 'productImage');
+  Future<Map<String, dynamic>> updateProductImage(String productId, {File? image, Uint8List? bytes, String? filename}) async {
+    return _httpClient.upload(
+      '/shop/$productId/image',
+      image,
+      'productImage',
+      bytes: bytes,
+      filename: filename,
+    );
   }
 
   Future<Map<String, dynamic>> updatePrice(String productId, double price) async {
@@ -38,12 +45,19 @@ class ShopService {
     return _httpClient.delete('/shop/$productId');
   }
 
-  Future<Map<String, dynamic>> createProduct(Map<String, dynamic> productData, File? imageFile) async {
-    if (imageFile != null) {
+  Future<Map<String, dynamic>> createProduct(
+    Map<String, dynamic> productData, {
+    File? imageFile,
+    Uint8List? bytes,
+    String? filename,
+  }) async {
+    if (imageFile != null || bytes != null) {
       return _httpClient.upload(
         '/shop',
         imageFile,
         'productImage',
+        bytes: bytes,
+        filename: filename,
         body: productData,
         method: 'POST',
       );

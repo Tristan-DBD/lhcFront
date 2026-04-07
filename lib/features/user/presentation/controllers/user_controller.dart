@@ -12,11 +12,11 @@ class UserController extends ChangeNotifier {
   bool canEditPayments = false;
   List<String> selectedRoles = [];
 
-  UserController() {
-    init();
-  }
-
   Future<void> init() async {
+    // On s'assure que le chargement est bien marqué
+    isLoading = true;
+    notifyListeners();
+
     await checkUserPermissions();
     await loadUsers();
   }

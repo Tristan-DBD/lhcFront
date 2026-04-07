@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../../../../core/api/api_response.dart';
@@ -114,11 +114,13 @@ class ProgramService {
     }
   }
 
-  /// Met à jour la photo de profil via l'API (Inclus ici car présent dans l'ancien service)
+  /// Met à jour la photo de profil via l'API (Compatible Web/Natif)
   Future<ApiResponse<void>> updateProfileImage(
-    String userId,
-    File imageFile,
-  ) async {
+    String userId, {
+    File? imageFile,
+    Uint8List? bytes,
+    String? filename,
+  }) async {
     try {
       final token = await StorageService.getToken();
       if (token == null) return ApiResponse.error('Token non trouvé');
@@ -133,21 +135,28 @@ class ProgramService {
         'Authorization': 'Bearer $token',
       });
 
-      final fileBytes = await imageFile.readAsBytes();
-      final fileName = imageFile.path.split('/').last;
+      Uint8List finalBytes;
+      String finalFileName;
+
+      if (kIsWeb) {
+        if (bytes == null) return ApiResponse.error('Données d\'image manquantes');
+        finalBytes = bytes;
+        finalFileName = filename ?? 'profile.jpg';
+      } else {
+        if (imageFile == null) return ApiResponse.error('Fichier d\'image manquant');
+        finalBytes = await imageFile.readAsBytes();
+        finalFileName = imageFile.path.split('/').last;
+      }
 
       String contentType = 'image/jpeg';
-      if (fileName.toLowerCase().endsWith('.png')) {
+      if (finalFileName.toLowerCase().endsWith('.png')) {
         contentType = 'image/png';
-      } else if (fileName.toLowerCase().endsWith('.jpg') ||
-          fileName.toLowerCase().endsWith('.jpeg')) {
-        contentType = 'image/jpeg';
       }
 
       final multipartFile = http.MultipartFile.fromBytes(
         'profileImage',
-        fileBytes,
-        filename: fileName,
+        finalBytes,
+        filename: finalFileName,
         contentType: MediaType.parse(contentType),
       );
 
