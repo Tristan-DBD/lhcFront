@@ -1,12 +1,11 @@
-# caches et fichiers temporaires
+# Flutter
 build/
 .dart_tool/
 .packages
 .pub/
 .pub-cache/
-.env
 
-# fichiers de config locaux / IDE
+# IDE
 *.iml
 .idea/
 *.lock
@@ -14,17 +13,21 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 
-# dossiers natifs non utilisés pour le web
+# Natif
 ios/
 android/
 linux/
 macos/
 windows/
+test/
 
 # Git
 .git/
 .gitignore
 
-# fichiers qui ne sont pas du code
+# Autres
 README.md
 analysis_options.yaml
+Dockerfile
+docker-compose.yml
+.dockerignore_old

@@ -1,7 +1,7 @@
 services:
   flutter-web:
     ports:
-      - "3000:80"
+      - "3000:8080"
     build:
       context: .
       args:
@@ -17,6 +17,7 @@ services:
     env_file:
       - .env
     environment:
+      - PORT=${PORT:-8080}
       - API_URL=${API_URL}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}

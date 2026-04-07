@@ -76,7 +76,6 @@ class ProductInventoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final stocks = product['stocks'] as List<dynamic>? ?? [];
     final String name = product['name'] ?? 'Inconnu';
-    final String id = product['id'] ?? '0';
     final String? imageUri = product['imageUri'];
 
     return AppCard(

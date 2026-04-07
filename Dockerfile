@@ -1,17 +1,38 @@
+# syntax=docker/dockerfile:1
 # Stage 1: Build Flutter Web
-FROM ghcr.io/cirruslabs/flutter:stable AS build
+FROM debian:bullseye-slim AS build
+
+# Installation des dépendances minimales pour Flutter
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    libglu1-mesa \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Fixer la version de Flutter pour la stabilité (équivalent à stable)
+RUN git clone https://github.com/flutter/flutter.git -b stable /usr/local/flutter
+ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
+# Activer le Web et pré-télécharger les outils
+ENV PUB_CACHE=/root/.pub-cache
+ENV FLUTTER_NO_AUDIT=true
+RUN flutter config --enable-web && flutter doctor
 
 WORKDIR /app
 
-# Copier seulement le nécessaire pour le build
+# Copier seulement le nécessaire pour les dépendances
 COPY pubspec.* ./
-RUN flutter --version
+
+# 🚀 NETTOYAGE : On retire temporairement le cache pour "purger" les erreurs de Matrix4 et config
 RUN flutter pub get
 
 COPY . .
 
-# Créer un .env vide si absent (Flutter l'exige comme asset, les vraies valeurs viennent des --dart-define)
-RUN test -f .env || touch .env
+# Créer un .env vide dans assets pour éviter les erreurs 404 au chargement (flutter_dotenv)
+RUN mkdir -p assets && touch assets/.env
 
 ARG API_URL
 ARG SUPABASE_URL
@@ -20,15 +41,15 @@ ARG SUPABASE_BUCKET
 ARG APP_NAME
 ARG APP_VERSION
 
-# Build Web avec variables d'environnement via Dart define
+# 🚀 NETTOYAGE : On compile "à froid" pour reconstruire les liens
 RUN flutter build web --release \
     --base-href / \
     --dart-define=API_URL=${API_URL} \
     --dart-define=SUPABASE_URL=${SUPABASE_URL} \
     --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
     --dart-define=SUPABASE_BUCKET=${SUPABASE_BUCKET} \
-    --dart-define=APP_NAME="${APP_NAME}" \
-    --dart-define=APP_VERSION="${APP_VERSION}"
+    --dart-define=APP_NAME=${APP_NAME} \
+    --dart-define=APP_VERSION=${APP_VERSION}
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
@@ -44,5 +65,9 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 8080
 
+# Version du cache (Détonateur Nginx) - v0.5
+ARG CACHE_VERSION=v0.5
+ENV CACHE_VERSION=${CACHE_VERSION}
+
 # At runtime, Railway injects $PORT. Use envsubst to inject it into nginx config.
-CMD sh -c "envsubst '\$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+CMD sh -c "envsubst '\$PORT \$CACHE_VERSION' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"

@@ -25,7 +25,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  
+
   <!-- Service Worker Update Strategy -->
   <meta name="service-worker-update" content="force" />
   <meta name="flutter-service-worker" content="/flutter_service_worker.js" />
@@ -56,7 +56,8 @@
       position: fixed;
       user-select: none;
       touch-action: none;
-      background-color: #000; /* Fond noir profond */
+      background-color: #000;
+      /* Fond noir profond */
     }
 
     #loading {
@@ -65,7 +66,8 @@
       justify-content: center;
       height: 100%;
       width: 100%;
-      background: radial-gradient(circle, #0175C2 0%, #000 70%); /* Dégradé radial avec votre bleu */
+      background: radial-gradient(circle, #0175C2 0%, #000 70%);
+      /* Dégradé radial avec votre bleu */
       transition: opacity 0.4s ease-out;
       position: absolute;
       top: 0;
@@ -79,9 +81,11 @@
     }
 
     #loading img {
-      width: 200px; /* Ajustez selon vos besoins */
+      width: 200px;
+      /* Ajustez selon vos besoins */
       height: auto;
-      filter: drop-shadow(0 0 15px rgba(1, 117, 194, 0.6)); /* Lueur bleue */
+      filter: drop-shadow(0 0 15px rgba(1, 117, 194, 0.6));
+      /* Lueur bleue */
     }
 
     /* Animation de pulsation douce */
@@ -90,10 +94,12 @@
         transform: scale(1);
         filter: drop-shadow(0 0 15px rgba(1, 117, 194, 0.4));
       }
+
       50% {
         transform: scale(1.05);
         filter: drop-shadow(0 0 30px rgba(1, 117, 194, 0.8));
       }
+
       100% {
         transform: scale(1);
         filter: drop-shadow(0 0 15px rgba(1, 117, 194, 0.4));
@@ -121,74 +127,105 @@
     }
 
     @keyframes progress {
-      0% { left: -50%; }
-      100% { left: 100%; }
+      0% {
+        left: -50%;
+      }
+
+      100% {
+        left: 100%;
+      }
     }
   </style>
 </head>
 
 <body>
+  <!-- SCRIPT DE NETTOYAGE NUCLÉAIRE (Anti-Cache) -->
+  <script>
+    (function () {
+      const APP_VERSION = 'v0.5'; // Synchronisé avec le Détonateur Nginx
+      const currentVersion = localStorage.getItem('lhc_app_version');
+
+      if (currentVersion !== APP_VERSION) {
+        console.log('Nouvelle version détectée ! Nettoyage du cache en cours...');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (registrations) {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+          }).then(function () {
+            localStorage.setItem('lhc_app_version', APP_VERSION);
+            // On vide aussi le cache des fichiers
+            if ('caches' in window) {
+              caches.keys().then(function (names) {
+                for (let name of names) caches.delete(name);
+              });
+            }
+            window.location.reload(true);
+          });
+        } else {
+          localStorage.setItem('lhc_app_version', APP_VERSION);
+        }
+      }
+    })();
+  </script>
+
   <div id="loading">
     <div class="logo-container">
       <img src="app-logo-192.png" alt="LHC Logo">
     </div>
     <div class="loading-bar"></div>
+    <div id="update-message"
+      style="display:none; color: white; font-family: sans-serif; margin-top: 20px; font-size: 14px; opacity: 0.8;">
+      Mise à jour de l'application...
+    </div>
   </div>
 
   <script src="flutter_bootstrap.js" async></script>
   <script>
-    // Configuration de la stratégie de mise à jour du Service Worker
+    // --- GESTION AUTO-UPDATE SENIOR-PROOF ---
+
+    // 1. Détection de mise à jour robuste
+    const updateHandler = (reg) => {
+      if (!reg) return;
+
+      // On force une vérification immédiate
+      reg.update();
+
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('Nouvelle version trouvée ! Préparation du rechargement...');
+
+            // Feedback visuel (le message qu'on a déjà dans le HTML)
+            const msg = document.getElementById('update-message');
+            if (msg) msg.style.display = 'block';
+
+            // On dit au nouveau SW de "passer devant"
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        };
+      };
+    };
+
+    // 2. Écouter l'enregistrement fait par Flutter
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/flutter_service_worker.js')
-          .then(function(registration) {
-            console.log('ServiceWorker registration successful');
-            
-            // Vérifier les mises à jour après un court délai pour éviter les erreurs d'état invalide
-            setTimeout(() => {
-              if (registration.active) {
-                registration.update().catch(err => console.log('SW update failed:', err));
-              }
-            }, 1000);
-            
-            // Vérification périodique (toutes les heures)
-            setInterval(() => {
-              registration.update();
-            }, 3600000);
+      navigator.serviceWorker.getRegistration().then(updateHandler);
 
-            // Gérer la mise à jour trouvée
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker == null) return;
-              
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed') {
-                  if (navigator.serviceWorker.controller) {
-                    // Une nouvelle version est disponible et prête à être activée
-                    console.log('New version installed and ready. Waiting for activation...');
-                    // Le message 'SKIP_WAITING' est envoyé par Flutter dans le SW par défaut
-                  }
-                }
-              };
-            };
-          })
-          .catch(function(err) {
-            console.log('ServiceWorker registration failed: ', err);
-          });
-
-        // Recharger automatiquement quand le nouveau Service Worker prend le contrôle
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          console.log('New Service Worker activated. Reloading page...');
-          refreshing = true;
-          window.location.reload();
-        });
+      // Relance automatique quand le nouveau SW prend le pouvoir
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        console.log('Nouvelle version activée ! Rechargement de la page...');
+        window.location.reload();
       });
     }
 
     // Fonction pour enlever l'écran de chargement
-    window.addEventListener('flutter-first-frame', function() {
+    window.addEventListener('flutter-first-frame', function () {
       const loader = document.getElementById('loading');
       if (loader) {
         loader.style.opacity = '0';
