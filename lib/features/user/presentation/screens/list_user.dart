@@ -18,15 +18,31 @@ class ListUserPage extends StatefulWidget {
 
 class _ListUserPageState extends State<ListUserPage> {
   late final UserController _controller;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _controller = UserController();
+    _scrollController.addListener(_onScroll);
     // On lance l'initialisation après le premier build pour s'assurer que tout soit prêt
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.init();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _controller.loadMoreUsers();
+    }
   }
 
   @override
@@ -161,6 +177,7 @@ class _ListUserPageState extends State<ListUserPage> {
                       child: RefreshIndicator(
                         onRefresh: () => _controller.loadUsers(),
                         child: GridView.builder(
+                          controller: _scrollController,
                           physics:
                               const AlwaysScrollableScrollPhysics(), // Important pour le Pull-to-refresh
                           gridDelegate:
@@ -175,8 +192,15 @@ class _ListUserPageState extends State<ListUserPage> {
                                     ResponsiveHelper.getGridSpacing(context),
                                 childAspectRatio: 0.8,
                               ),
-                          itemCount: _controller.users.length,
+                          itemCount: _controller.users.length +
+                              (_controller.hasNextPage ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (index == _controller.users.length) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
                             final user = _controller.users[index];
                             return _buildUserCard(
                               name: user.fullName,

@@ -34,6 +34,12 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: type=raw,value=latest
 
+      - name: Get version from pubspec.yaml
+        id: pubspec_version
+        run: |
+          VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -48,4 +54,4 @@ jobs:
             SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
             SUPABASE_BUCKET=${{ secrets.SUPABASE_BUCKET }}
             APP_NAME=${{ secrets.APP_NAME }}
-            APP_VERSION=${{ secrets.APP_VERSION }}
+            APP_VERSION=${{ steps.pubspec_version.outputs.version }}

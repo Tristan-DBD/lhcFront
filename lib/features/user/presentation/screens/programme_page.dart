@@ -369,7 +369,7 @@ class _ProgrammePageState extends State<ProgrammePage> {
 
     setState(() {
       final List<Map<String, dynamic>> localPrograms = [];
-      for (var p in widget.user.progUri) {
+      for (var p in widget.user.programs) {
         if (p['name'] != null || p['fileUri'] != null) {
           localPrograms.add(p);
         }

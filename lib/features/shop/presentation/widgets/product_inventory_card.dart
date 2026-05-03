@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Import pour kIsWeb
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/atoms/app_counter.dart';
 import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/widgets/atoms/app_filter_chip.dart';
+import '../../../../core/utils/image_compressor.dart';
 
 class ProductInventoryCard extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -34,10 +36,36 @@ class ProductInventoryCard extends StatelessWidget {
     );
     if (result != null) {
       final file = result.files.single;
+      
+      Uint8List? compressedBytes;
+      if (file.bytes != null) {
+        try {
+          // Utilisation du compresseur avec les mêmes paramètres que pour la création
+          compressedBytes = await ImageCompressor.compressImage(
+            file.bytes!,
+            maxWidth: 1024,
+            maxHeight: 1024,
+            quality: 75,
+            maintainAspectRatio: true,
+          );
+        } catch (e) {
+          debugPrint('Erreur lors de la compression : $e');
+        }
+      }
+
+      String name = file.name;
+      if (compressedBytes != null) {
+        if (name.contains('.')) {
+          name = '${name.substring(0, name.lastIndexOf('.'))}.jpg';
+        } else {
+          name = '$name.jpg';
+        }
+      }
+
       onImageUpdate(
         image: kIsWeb ? null : (file.path != null ? File(file.path!) : null),
-        bytes: file.bytes,
-        filename: file.name,
+        bytes: compressedBytes ?? file.bytes,
+        filename: name,
       );
     }
   }

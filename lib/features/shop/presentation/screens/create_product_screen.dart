@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/utils/message_service.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/image_compressor.dart';
 import '../../../../core/widgets/atoms/app_filter_chip.dart';
 import '../../data/services/shop_service.dart';
 
@@ -48,16 +49,71 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
     if (result != null) {
       final file = result.files.single;
+      
+      // Show loading indicator
       setState(() {
-        _selectedImageName = file.name;
-        _selectedImageBytes = file.bytes;
-        // Correction Senior : On ne touche JAMAIS à .path sur le Web, même pour un test
-        if (!kIsWeb) {
-          if (file.path != null) {
-            _selectedImage = File(file.path!);
+        _isLoading = true;
+      });
+      
+      try {
+        Uint8List? compressedBytes;
+        
+        if (file.bytes != null) {
+          // Compress the image
+          compressedBytes = await ImageCompressor.compressImage(
+            file.bytes!,
+            maxWidth: 1024, // Optimized for mobile
+            maxHeight: 1024,
+            quality: 75, // Optimized for storage
+            maintainAspectRatio: true,
+          );
+        }
+        
+        if (compressedBytes == null) {
+          // Fallback to original if compression fails
+          compressedBytes = file.bytes;
+        }
+        
+        setState(() {
+          // Ensure extension is .jpg since we forced JPEG format
+          String name = file.name;
+          if (name.contains('.')) {
+            name = '${name.substring(0, name.lastIndexOf('.'))}.jpg';
+          } else {
+            name = '$name.jpg';
+          }
+          _selectedImageName = name;
+          _selectedImageBytes = compressedBytes;
+          // Correction Senior : On ne touche JAMAIS à .path sur le Web, même pour un test
+          if (!kIsWeb) {
+            if (file.path != null) {
+              _selectedImage = File(file.path!);
+            }
+          }
+          _isLoading = false;
+        });
+        
+        // Show compression info if compression was successful
+        if (file.bytes != null && compressedBytes != null && compressedBytes.length < file.bytes!.length) {
+          final compressionRatio = ImageCompressor.calculateCompressionRatio(file.bytes!, compressedBytes);
+          final originalSize = ImageCompressor.formatFileSize(file.bytes!.length);
+          final compressedSize = ImageCompressor.formatFileSize(compressedBytes.length);
+          
+          if (mounted) {
+            MessageService.showInfo(
+              context,
+              'Image compressée: $originalSize -> $compressedSize (${compressionRatio.toStringAsFixed(1)}% de réduction)',
+            );
           }
         }
-      });
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        if (mounted) {
+          MessageService.showError(context, 'Erreur lors de la compression: $e');
+        }
+      }
     }
   }
 

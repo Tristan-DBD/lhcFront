@@ -55,26 +55,34 @@ class UserService {
     }
   }
 
-  static Future<ApiResponse<List<User>>> getAll({List<String>? roles}) async {
+  static Future<ApiResponse<List<User>>> getAll({
+    List<String>? roles,
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final httpClient = HttpClient();
-      String url = '/user';
+      String url = '/user?page=$page&limit=$limit';
       if (roles != null && roles.isNotEmpty) {
         final queryParams = roles.map((r) => 'role=$r').join('&');
-        url = '$url?$queryParams';
+        url = '$url&$queryParams';
       }
       final response = await httpClient.get(url);
 
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> dataList = response['data'];
-        if (dataList.isNotEmpty && dataList[0]['message'] is List) {
+        final Map<String, dynamic>? pagination = response['pagination'];
+
+        if (dataList.isNotEmpty &&
+            dataList[0] is Map &&
+            dataList[0]['message'] is List) {
           final List<dynamic> usersData = dataList[0]['message'];
           final users = usersData.map((json) => User.fromJson(json)).toList();
-          return ApiResponse.success(users);
+          return ApiResponse.success(users, pagination: pagination);
         }
         // Fallback si la structure est directe
         final users = dataList.map((json) => User.fromJson(json)).toList();
-        return ApiResponse.success(users);
+        return ApiResponse.success(users, pagination: pagination);
       }
       String? errorMessage;
       if (response['data'] != null && (response['data'] as List).isNotEmpty) {

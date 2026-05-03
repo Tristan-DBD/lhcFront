@@ -12,16 +12,25 @@ class ApiResponse<T> {
   /// The HTTP status code of the response.
   final int? statusCode;
 
+  /// Pagination metadata if available.
+  final Map<String, dynamic>? pagination;
+
   ApiResponse({
     required this.success,
     this.data,
     this.errorMessage,
     this.statusCode,
+    this.pagination,
   });
 
   /// Factory constructor for successful responses.
-  factory ApiResponse.success(T data, {int? statusCode}) {
-    return ApiResponse(success: true, data: data, statusCode: statusCode);
+  factory ApiResponse.success(T data, {int? statusCode, Map<String, dynamic>? pagination}) {
+    return ApiResponse(
+      success: true,
+      data: data,
+      statusCode: statusCode,
+      pagination: pagination,
+    );
   }
 
   /// Factory constructor for error responses.
@@ -35,6 +44,6 @@ class ApiResponse<T> {
 
   @override
   String toString() {
-    return 'ApiResponse(success: $success, data: $data, errorMessage: $errorMessage, statusCode: $statusCode)';
+    return 'ApiResponse(success: $success, data: $data, errorMessage: $errorMessage, statusCode: $statusCode, pagination: $pagination)';
   }
 }

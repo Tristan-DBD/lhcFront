@@ -9,7 +9,7 @@ class User {
   final String role;
   final List<Map<String, dynamic>> stats;
   final String imageUri;
-  final List<Map<String, dynamic>> progUri;
+  final List<Map<String, dynamic>> programs;
   final List<Map<String, dynamic>> payments;
 
   User({
@@ -23,7 +23,7 @@ class User {
     required this.role,
     required this.stats,
     required this.imageUri,
-    required this.progUri,
+    required this.programs,
     required this.payments,
   });
 
@@ -36,10 +36,10 @@ class User {
       statsList = statsData.map((item) => item as Map<String, dynamic>).toList();
     }
 
-    List<Map<String, dynamic>> progUriList = [];
-    if (json['progUri'] != null) {
-      final progUriData = json['progUri'] as List;
-      progUriList = progUriData
+    List<Map<String, dynamic>> programsList = [];
+    if (json['programs'] != null) {
+      final programsData = json['programs'] as List;
+      programsList = programsData
           .map((item) => item as Map<String, dynamic>)
           .toList();
     }
@@ -63,7 +63,7 @@ class User {
       role: json['role'] as String? ?? '',
       stats: statsList,
       imageUri: json['imageUri'] as String? ?? 'profileImage/default.png',
-      progUri: progUriList,
+      programs: programsList,
       payments: paymentList,
     );
   }
@@ -81,7 +81,7 @@ class User {
       'role': role,
       'stats': stats,
       'imageUri': imageUri,
-      'progUri': progUri,
+      'programs': programs,
       'payments': payments,
     };
   }
@@ -101,7 +101,7 @@ class User {
     String? role,
     List<Map<String, dynamic>>? stats,
     String? imageUri,
-    List<Map<String, dynamic>>? progUri,
+    List<Map<String, dynamic>>? programs,
     List<Map<String, dynamic>>? payments,
   }) {
     return User(
@@ -115,7 +115,7 @@ class User {
       role: role ?? this.role,
       stats: stats ?? this.stats,
       imageUri: imageUri ?? this.imageUri,
-      progUri: progUri ?? this.progUri,
+      programs: programs ?? this.programs,
       payments: payments ?? this.payments,
     );
   }
@@ -125,3 +125,4 @@ class User {
     return 'User(id: $id, name: $name, surname: $surname, email: $email, phone: $phone, age: $age, weight: $weight, role: $role, stats: $stats, imageUri: $imageUri)';
   }
 }
+

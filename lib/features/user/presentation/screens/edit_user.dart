@@ -7,6 +7,7 @@ import '../../../../core/storage/supabase_storage.dart';
 import '../../../../core/utils/image_helper.dart';
 import '../../../../core/utils/responsive_helper.dart';
 import '../../../../core/utils/message_service.dart';
+import '../../../../core/utils/image_compressor.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -119,16 +120,70 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
       final PlatformFile pickedFile = result.files.single;
 
+      // Show loading indicator
       setState(() {
-        _newProfileImageBytes = pickedFile.bytes;
-        _newProfileImageName = pickedFile.name;
+        _isLoading = true;
       });
 
-      if (mounted) {
-        MessageService.showInfo(
-          context,
-          'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
-        );
+      try {
+        Uint8List? compressedBytes;
+        
+        if (pickedFile.bytes != null) {
+          // Compress the image
+          compressedBytes = await ImageCompressor.compressImage(
+            pickedFile.bytes!,
+            maxWidth: 600, // Reduced from 800 for better compression
+            maxHeight: 600,
+            quality: 75, // Reduced from 85 for better compression
+            maintainAspectRatio: true,
+          );
+        }
+        
+        if (compressedBytes == null) {
+          // Fallback to original if compression fails
+          compressedBytes = pickedFile.bytes;
+        }
+
+        setState(() {
+          _newProfileImageBytes = compressedBytes;
+          // Ensure extension is .jpg since we forced JPEG format
+          String name = pickedFile.name;
+          if (name.contains('.')) {
+            name = '${name.substring(0, name.lastIndexOf('.'))}.jpg';
+          } else {
+            name = '$name.jpg';
+          }
+          _newProfileImageName = name;
+          _isLoading = false;
+        });
+
+        // Show compression info if compression was successful
+        if (pickedFile.bytes != null && compressedBytes != null && compressedBytes.length < pickedFile.bytes!.length) {
+          final compressionRatio = ImageCompressor.calculateCompressionRatio(pickedFile.bytes!, compressedBytes);
+          final originalSize = ImageCompressor.formatFileSize(pickedFile.bytes!.length);
+          final compressedSize = ImageCompressor.formatFileSize(compressedBytes.length);
+          
+          if (mounted) {
+            MessageService.showInfo(
+              context,
+              'Photo compressée: $originalSize -> $compressedSize (${compressionRatio.toStringAsFixed(1)}% de réduction)',
+            );
+          }
+        } else {
+          if (mounted) {
+            MessageService.showInfo(
+              context,
+              'Photo de profil sélectionnée. Elle sera mise à jour lors de l\'enregistrement.',
+            );
+          }
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        if (mounted) {
+          MessageService.showError(context, 'Erreur lors de la compression: $e');
+        }
       }
     } catch (e) {
       if (mounted) {

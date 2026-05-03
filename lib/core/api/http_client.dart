@@ -166,16 +166,18 @@ class HttpClient {
       final token = await StorageService.getToken();
       request.headers.addAll(_apiService.headers(token: token));
 
-      if (kIsWeb) {
-        if (bytes == null) throw Exception('Bytes required for web upload');
+      if (bytes != null) {
+        // Si des octets sont fournis (ex: image compressée), on les utilise en priorité
         request.files.add(
           http.MultipartFile.fromBytes(
             field,
             bytes,
-            filename: filename ?? 'upload.jpg',
+            filename: filename ?? (file != null ? file.path.split('/').last : 'upload.jpg'),
             contentType: MediaType('image', 'jpeg'),
           ),
         );
+      } else if (kIsWeb) {
+        throw Exception('Bytes required for web upload');
       } else {
         if (file == null) throw Exception('File required for native upload');
         // Détection manuelle du type MIME pour garantir la compatibilité backend

@@ -338,7 +338,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               // Mettre à jour l'utilisateur local avec les nouveaux programmes
                               setState(() {
                                 _currentUser = _currentUser.copyWith(
-                                  progUri: updatedPrograms,
+                                  programs: updatedPrograms,
                                 );
                               });
                             },
