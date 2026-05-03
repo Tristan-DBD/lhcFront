@@ -55,3 +55,4 @@ jobs:
             SUPABASE_BUCKET=${{ secrets.SUPABASE_BUCKET }}
             APP_NAME=${{ secrets.APP_NAME }}
             APP_VERSION=${{ steps.pubspec_version.outputs.version }}
+            CACHE_VERSION=${{ steps.pubspec_version.outputs.version }}
