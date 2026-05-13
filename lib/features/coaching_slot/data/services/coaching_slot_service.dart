@@ -66,8 +66,12 @@ class CoachingSlotService {
       final httpClient = HttpClient();
       final response = await httpClient.get('/coaching-slots/$id');
 
-      if (response['success'] == true && response['data'] != null) {
-        return ApiResponse.success(CoachingSlot.fromJson(response['data']));
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final data = response['data'][0];
+        final slotMap = data['message'] ?? data;
+        return ApiResponse.success(CoachingSlot.fromJson(slotMap));
       }
 
       return ApiResponse.error(response['message'] ?? 'Créneau non trouvé');
@@ -181,9 +185,14 @@ class CoachingSlotService {
       final httpClient = HttpClient();
       final response = await httpClient.get('/coaching-slots/bookings/$slotId');
 
-      if (response['success'] == true && response['data'] != null) {
-        final List<dynamic> dataList = response['data'];
-        final bookings = dataList
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final raw = response['data'][0];
+        final List<dynamic> bookingList = raw['message'] is List
+            ? raw['message'] as List<dynamic>
+            : response['data'] as List<dynamic>;
+        final bookings = bookingList
             .map((item) => SlotBooking.fromJson(item))
             .toList();
         return ApiResponse.success(bookings);
@@ -213,6 +222,36 @@ class CoachingSlotService {
   }
 
   // Helper methods
+  static Future<ApiResponse<List<CoachingSlot>>> createBatch(
+    Map<String, dynamic> batchData,
+  ) async {
+    try {
+      final httpClient = HttpClient();
+      final response =
+          await httpClient.post('/coaching-slots/batch', body: batchData);
+
+      if (response['success'] == true &&
+          response['data'] != null &&
+          (response['data'] as List).isNotEmpty) {
+        final raw = response['data'][0];
+        final List<dynamic> slotList = raw['message'] is List
+            ? raw['message'] as List<dynamic>
+            : response['data'] as List<dynamic>;
+        final slots = slotList
+            .map((item) => CoachingSlot.fromJson(item))
+            .toList();
+        return ApiResponse.success(slots);
+      }
+
+      return ApiResponse.error(
+        _extractErrorMessage(response) ??
+            'Erreur lors de la création des créneaux',
+      );
+    } catch (e) {
+      return ApiResponse.error('Erreur lors de la création des créneaux: $e');
+    }
+  }
+
   static String _buildQueryParams(
     DateTime? startDate,
     DateTime? endDate,

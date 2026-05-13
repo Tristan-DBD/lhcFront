@@ -21,20 +21,20 @@ class CreateCoachingSlotScreen extends StatefulWidget {
 
 class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
   bool _isLoading = false;
+  bool _isRepeat = false;
   final _formKey = GlobalKey<FormState>();
   DateTime? _slotDate;
+  DateTime? _endDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   String? _selectedCoachId;
   List<User> _coaches = [];
 
-  // Focus nodes pour la navigation entre les champs
   final _startTimeFocusNode = FocusNode();
   final _endTimeFocusNode = FocusNode();
 
   @override
   void dispose() {
-    // Libérer les ressources
     _startTimeFocusNode.dispose();
     _endTimeFocusNode.dispose();
     super.dispose();
@@ -66,7 +66,6 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
       _isLoading = true;
     });
     try {
-      // Combiner la date avec les heures de début et fin
       final startTime = DateTime(
         _slotDate!.year,
         _slotDate!.month,
@@ -83,25 +82,60 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
         _endTime!.minute,
       );
 
-      final slotData = {
-        'coachId': _selectedCoachId,
-        'startTime': startTime.toUtc().toIso8601String(),
-        'endTime': endTime.toUtc().toIso8601String(),
-      };
-      final response = await CoachingSlotService.create(slotData);
-      if (response.success) {
-        if (mounted) {
-          MessageService.showSuccess(context, 'Créneau créé avec succès');
+      if (_isRepeat && _endDate != null) {
+        final fmt = (DateTime d) =>
+            '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+        final slotData = {
+          'coachId': _selectedCoachId,
+          'startTime':
+              '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+          'endTime':
+              '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
+          'startDate': fmt(_slotDate!),
+          'endDate': fmt(_endDate!),
+        };
+        final response = await CoachingSlotService.createBatch(slotData);
+        if (response.success) {
+          if (mounted) {
+            MessageService.showSuccess(context, 'Créneaux créés avec succès');
+          }
+          widget.onSlotCreated?.call();
+          Navigator.pop(context);
+        } else {
+          if (mounted) {
+            MessageService.showError(
+              context,
+              response.errorMessage ?? 'Erreur lors de la création des créneaux',
+            );
+          }
         }
-        // Notifier la page parente que le créneau a été créé
-        widget.onSlotCreated?.call();
-        Navigator.pop(context);
+      } else {
+        final slotData = {
+          'coachId': _selectedCoachId,
+          'startTime': startTime.toUtc().toIso8601String(),
+          'endTime': endTime.toUtc().toIso8601String(),
+        };
+        final response = await CoachingSlotService.create(slotData);
+        if (response.success) {
+          if (mounted) {
+            MessageService.showSuccess(context, 'Créneau créé avec succès');
+          }
+          widget.onSlotCreated?.call();
+          Navigator.pop(context);
+        } else {
+          if (mounted) {
+            MessageService.showError(
+              context,
+              response.errorMessage ?? 'Erreur lors de la création',
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
         MessageService.showError(
           context,
-          'Erreur lors de la création du créneau: $e',
+          'Erreur lors de la création: $e',
         );
       }
     } finally {
@@ -142,7 +176,6 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
         key: _formKey,
         child: Column(
           children: [
-            // Sélection de la date
             AppDatePicker(
               labelText: 'Date du créneau',
               hintText: 'Quand aura lieu le créneau ?',
@@ -164,7 +197,6 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
               },
             ),
 
-            // Heure de début
             AppTimePicker(
               labelText: 'Heure de début',
               hintText: 'Ex: 14:00',
@@ -182,7 +214,6 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
 
             const SizedBox(height: 16),
 
-            // Heure de fin
             AppTimePicker(
               labelText: 'Heure de fin',
               hintText: 'Ex: 15:00',
@@ -208,7 +239,6 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
 
             const SizedBox(height: 16),
 
-            // Sélection du coach
             GenericDropdown<User>(
               items: _coaches,
               displayString: (coach) => coach.fullName,
@@ -242,10 +272,52 @@ class _CreateCoachingSlotScreenState extends State<CreateCoachingSlotScreen> {
               },
             ),
 
+            const SizedBox(height: 16),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    CheckboxListTile(
+                      title: const Text('Répéter sur plusieurs jours'),
+                      subtitle: const Text('Crée un créneau à la même heure chaque jour'),
+                      value: _isRepeat,
+                      onChanged: (val) {
+                        setState(() {
+                          _isRepeat = val ?? false;
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                    if (_isRepeat)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: AppDatePicker(
+                          labelText: 'Jusqu\'au',
+                          hintText: 'Date de fin',
+                          prefixIcon: Icons.date_range,
+                          firstDate: _slotDate ?? DateTime.now(),
+                          onDateChanged: (dateTime) {
+                            _endDate = dateTime;
+                          },
+                          validator: (dateTime) {
+                            if (dateTime == null) {
+                              return 'Veuillez sélectionner une date de fin';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 40),
 
             AppButton(
-              text: 'Ajouter le créneau',
+              text: _isRepeat ? 'Créer les créneaux' : 'Ajouter le créneau',
               isFullWidth: true,
               height: 50,
               isLoading: _isLoading,

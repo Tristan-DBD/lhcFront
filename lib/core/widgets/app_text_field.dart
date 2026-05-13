@@ -20,6 +20,7 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final void Function()? onEditingComplete;
   final void Function(String)? onSubmitted;
+  final Iterable<String>? autofillHints;
 
   const AppTextField({
     super.key,
@@ -41,6 +42,7 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.onEditingComplete,
     this.onSubmitted,
+    this.autofillHints,
   });
 
   @override
@@ -50,6 +52,7 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       enabled: enabled,
       keyboardType: keyboardType,
+      autofillHints: autofillHints,
       validator: validator,
       onChanged: onChanged,
       onSaved: onSaved,

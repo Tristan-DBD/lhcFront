@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
+import 'package:lhc_front/features/individual_session/presentation/screens/list_individual_session.dart';
 import 'package:lhc_front/features/coaching_slot/presentation/screens/list_coaching_slot.dart';
 import 'package:lhc_front/features/user/presentation/screens/list_user.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -127,6 +128,20 @@ class _HomePageState extends State<HomePage> {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (context) => const ListCoursePage(),
+                            ),
+                          );
+                        },
+                      ),
+                      FeatureCard(
+                        icon: Icons.person,
+                        title: 'Séances individuelles',
+                        description: 'Coaching 1-1',
+                        color: Colors.teal,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) =>
+                                  const ListIndividualSessionPage(),
                             ),
                           );
                         },

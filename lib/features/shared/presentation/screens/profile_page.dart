@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lhc_front/core/utils/message_service.dart';
 import 'package:lhc_front/features/coaching_slot/presentation/screens/list_coaching_slot.dart';
-import '../../../../core/auth/auth_service.dart';
 import 'package:lhc_front/features/course/presentation/screens/list_course.dart';
+import 'package:lhc_front/features/individual_session/presentation/screens/list_individual_session.dart';
+import '../../../../core/auth/auth_service.dart';
 import '../../../../core/auth/jwt_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../user/presentation/screens/edit_user.dart';
@@ -356,6 +357,16 @@ class _ProfilePageState extends State<ProfilePage> {
                         _buildOptionRow(
                           label: 'Cours Collectifs',
                           page: const ListCoursePage(),
+                        ),
+                      const SizedBox(height: 20),
+                      if (_currentRole.isAthleteProg ||
+                          _currentRole.isAthleteCo ||
+                          _currentRole.isAthleteFull ||
+                          _currentRole.isCoach ||
+                          _currentRole.isAdmin)
+                        _buildOptionRow(
+                          label: 'Cours individuel',
+                          page: const ListIndividualSessionPage(),
                         ),
                       const SizedBox(height: 20),
                       _buildOptionRow(

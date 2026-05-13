@@ -280,53 +280,55 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 16),
 
-                    // Champ Login
-                    AppTextField(
-                      controller: _loginController,
-                      labelText: 'Login',
-                      hintText: 'Entrez votre login',
-                      prefixIcon: Icons.person,
-                      focusNode: _loginFocusNode,
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: (_) {
-                        // Passer au champ mot de passe quand on appuie sur Entrée
-                        FocusScope.of(context).requestFocus(_passwordFocusNode);
-                      },
-                      validator: (value) => Validators.required(value, 'login'),
+                    AutofillGroup(
+                      child: Column(
+                        children: [
+                          AppTextField(
+                            controller: _loginController,
+                            labelText: 'Login',
+                            hintText: 'Entrez votre login',
+                            prefixIcon: Icons.person,
+                            focusNode: _loginFocusNode,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.username],
+                            onSubmitted: (_) {
+                              FocusScope.of(context).requestFocus(_passwordFocusNode);
+                            },
+                            validator: (value) => Validators.required(value, 'login'),
+                          ),
+                          const SizedBox(height: 14),
+                          AppTextField(
+                            controller: _passwordController,
+                            labelText: 'Mot de passe',
+                            hintText: 'Votre mot de passe',
+                            prefixIcon: Icons.lock_outline,
+                            obscureText: _obscurePassword,
+                            autofillHints: const [AutofillHints.password],
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            focusNode: _passwordFocusNode,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) {
+                              if (_formKey.currentState!.validate()) {
+                                _handleLogin();
+                              }
+                            },
+                            validator: (value) => Validators.required(value, 'mot de passe'),
+                          ),
+                        ],
+                      ),
                     ),
-
-                    const SizedBox(height: 14),
-
-                    // Champ Mot de passe
-                    AppTextField(
-                  controller: _passwordController,
-                  labelText: 'Mot de passe',
-                  hintText: 'Votre mot de passe',
-                  prefixIcon: Icons.lock_outline,
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  focusNode: _passwordFocusNode,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) {
-                    if (_formKey.currentState!.validate()) {
-                      _handleLogin();
-                    }
-                  },
-                  validator: (value) =>
-                      Validators.required(value, 'mot de passe'),
-                ),
 
                     const SizedBox(height: 50),
 
