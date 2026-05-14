@@ -33,10 +33,11 @@ class CoachingSlotService {
     DateTime? startDate,
     DateTime? endDate,
     String? coachId,
+    int limit = 500,
   }) async {
     try {
       final httpClient = HttpClient();
-      final queryParams = _buildQueryParams(startDate, endDate, coachId);
+      final queryParams = _buildQueryParams(startDate, endDate, coachId, limit);
       final response = await httpClient.get('/coaching-slots$queryParams');
 
       if (response['success'] == true && response['data'] != null) {
@@ -44,7 +45,11 @@ class CoachingSlotService {
         final slots = dataList
             .map((item) => CoachingSlot.fromJson(item))
             .toList();
-        return ApiResponse.success(slots);
+        final Map<String, dynamic>? pagination =
+            response['pagination'] != null
+                ? Map<String, dynamic>.from(response['pagination'])
+                : null;
+        return ApiResponse.success(slots, pagination: pagination);
       }
 
       return ApiResponse.error(
@@ -256,13 +261,16 @@ class CoachingSlotService {
     DateTime? startDate,
     DateTime? endDate,
     String? coachId,
-  ) {
+    [int limit = 500,
+  ]) {
     final params = <String>[];
 
     if (startDate != null && endDate != null) {
       params.add('startDate=${startDate.toUtc().toIso8601String()}');
       params.add('endDate=${endDate.toUtc().toIso8601String()}');
     }
+
+    params.add('limit=$limit');
 
     if (coachId != null) {
       params.add('coachId=$coachId');
